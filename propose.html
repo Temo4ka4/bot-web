@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Предложить ДЗ</title>
+  <style>
+    :root{--bg:#fff;--card:#fff;--text:#111;--muted:#666;--shadow:0 10px 25px rgba(0,0,0,.08);--border:#e9e9ef;--btn:#111;--btnText:#fff}
+    [data-theme="dark"]{--bg:#0f1115;--card:#141824;--text:#f2f3f5;--muted:#a6adbb;--shadow:0 10px 25px rgba(0,0,0,.35);--border:#262b3a;--btn:#f2f3f5;--btnText:#111}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    .top{position:sticky;top:0;background:linear-gradient(180deg,var(--bg),rgba(0,0,0,0));backdrop-filter:saturate(1.2) blur(6px);padding:14px 16px 8px;display:flex;align-items:center;gap:12px}
+    .title{font-weight:800;font-size:18px}
+    .sp{flex:1}
+    .toggle{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);user-select:none}
+    .switch{width:44px;height:24px;border-radius:999px;background:var(--border);position:relative;cursor:pointer}
+    .knob{width:18px;height:18px;border-radius:50%;background:var(--card);position:absolute;top:3px;left:3px;box-shadow:var(--shadow);transition:.18s}
+    [data-theme="dark"] .knob{left:23px}
+    .wrap{padding:10px 16px 18px;max-width:820px;margin:0 auto}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin:10px 0}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,select,textarea{width:100%;box-sizing:border-box;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:14px;padding:10px 12px;font-size:14px}
+    textarea{min-height:130px;resize:vertical;white-space:pre-wrap}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row > div{flex:1;min-width:220px}
+    button{border:0;border-radius:14px;padding:12px 14px;font-weight:900;background:var(--btn);color:var(--btnText);cursor:pointer;width:100%}
+    .hint{color:var(--muted);font-size:12px;margin-top:8px}
+    .ok{color:#22c55e;font-weight:900}
+    .err{color:#ff5a5f}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <div class="title">✉️ Предложить ДЗ</div>
+    <div class="sp"></div>
+    <div class="toggle" id="toggle"><span>Тема</span><div class="switch"><div class="knob"></div></div></div>
+  </div>
+
+  <div class="wrap">
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>Дата (вручную)</label>
+          <input id="day" placeholder="YYYY-MM-DD (например 2025-12-19)"/>
+          <div class="hint">Формат нужен именно так (как в базе/боте).</div>
+        </div>
+        <div>
+          <label>Предмет</label>
+          <select id="subject"></select>
+        </div>
+      </div>
+
+      <label>Домашка</label>
+      <textarea id="text" placeholder="Напиши домашку одним сообщением…"></textarea>
+
+      <div style="margin-top:12px">
+        <button id="send">Отправить предложение</button>
+      </div>
+
+      <div class="hint" id="status"></div>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "https://YOUR_DOMAIN_OR_IP:8080";
+  const tg = window.Telegram?.WebApp;
+  if (tg) tg.ready();
+
+  function setTheme(t){document.documentElement.setAttribute("data-theme", t);localStorage.setItem("theme", t);}
+  setTheme(localStorage.getItem("theme") || "light");
+  document.getElementById("toggle").onclick=()=>{setTheme((document.documentElement.getAttribute("data-theme")||"light")==="light"?"dark":"light");};
+
+  async function apiGet(path){
+    const initData = tg?.initData || "";
+    const r = await fetch(API_BASE + path, { headers: { "X-Telegram-InitData": initData }});
+    if(!r.ok) throw new Error(await r.text());
+    return await r.json();
+  }
+  async function apiPost(path, body){
+    const initData = tg?.initData || "";
+    const r = await fetch(API_BASE + path, {
+      method:"POST",
+      headers: { "Content-Type":"application/json", "X-Telegram-InitData": initData },
+      body: JSON.stringify(body),
+    });
+    if(!r.ok) throw new Error(await r.text());
+    return await r.json();
+  }
+
+  function setStatus(html){document.getElementById("status").innerHTML = html;}
+  function esc(s){return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
+
+  (async ()=>{
+    try{
+      const data = await apiGet("/api/subjects");
+      const sel = document.getElementById("subject");
+      sel.innerHTML="";
+      for(const s of (data.subjects||[])){
+        const opt=document.createElement("option");
+        opt.value=s; opt.textContent=s;
+        sel.appendChild(opt);
+      }
+    }catch(e){
+      setStatus(`<span class="err">Не удалось загрузить список предметов</span><br/>${esc(String(e))}`);
+    }
+  })();
+
+  document.getElementById("send").onclick = async ()=>{
+    const day = (document.getElementById("day").value||"").trim();
+    const subject = document.getElementById("subject").value||"🧾 Общее";
+    const text = (document.getElementById("text").value||"").trim();
+
+    if(!day){setStatus(`<span class="err">Впиши дату.</span>`);return;}
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(day)){setStatus(`<span class="err">Дата должна быть в формате YYYY-MM-DD.</span>`);return;}
+    if(!text){setStatus(`<span class="err">Напиши текст ДЗ.</span>`);return;}
+
+    setStatus("Отправляю…");
+    try{
+      await apiPost("/api/propose", { day, subject, text });
+      setStatus(`<span class="ok">✅ Предложение отправлено владельцу/модерам класса.</span>`);
+      document.getElementById("text").value="";
+      if (tg) tg.HapticFeedback?.notificationOccurred?.("success");
+    }catch(e){
+      setStatus(`<span class="err">Ошибка отправки</span><br/>${esc(String(e))}`);
+      if (tg) tg.HapticFeedback?.notificationOccurred?.("error");
+    }
+  };
+</script>
+</body>
+</html>
