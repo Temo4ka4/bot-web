@@ -17,6 +17,11 @@
   <script>
   const tg = window.Telegram?.WebApp || null;
   const initDataLen = tg?.initData?.length || 0;
+    // DEBUG (потом уберёшь)
+console.log("tg", !!tg);
+console.log("initDataLen", tg?.initData?.length || 0);
+console.log("initDataUnsafe", tg?.initDataUnsafe || null);
+
 
   async function pingHealth(){
     try{
@@ -32,6 +37,7 @@
     const health = await pingHealth();
     alert(`tg=${!!tg}\ninitDataLen=${initDataLen}\n\n${health}`);
   })();
+    
 </script>
 
 </body>
