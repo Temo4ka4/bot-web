@@ -9,65 +9,50 @@
     body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:16px}
     pre{white-space:pre-wrap;background:#f4f4f6;padding:12px;border-radius:12px}
     button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer;margin-right:8px}
-    .row{margin:12px 0}
   </style>
 </head>
 <body>
   <h3>WebApp debug</h3>
-  <div class="row">
+
+  <div style="margin-bottom:12px">
     <button id="btnReload">Обновить данные</button>
     <button id="btnExpand">tg.expand()</button>
   </div>
+
   <pre id="out">loading...</pre>
 
-<script>
-const API = "https://api.temo4ka4.ru";
+  <script>
+    const API_BASE = "https://api.temo4ka4.ru"; // если сделаешь вариант 2 — можешь оставить так же
 
-function safeJson(obj){
-  try { return JSON.stringify(obj, null, 2); }
-  catch(e){ return String(obj); }
-}
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
 
-async function check(){
-  const tg = window.Telegram?.WebApp || null;
+    async function load() {
+      const info = {
+        hasTelegramWebApp: !!tg,
+        initDataLen: tg ? (tg.initData || "").length : 0,
+        initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
+        platform: tg?.platform || null,
+        version: tg?.version || null,
+        href: location.href
+      };
 
-  // если tg есть — попросим Telegram “инициализироваться”
-  try { tg?.ready(); } catch(e){}
-  try { tg?.expand(); } catch(e){}
+      let health = null;
+      try {
+        const r = await fetch(API_BASE + "/health", { method: "GET" });
+        const text = await r.text();
+        health = { ok: r.ok, status: r.status, text };
+      } catch (e) {
+        health = { error: String(e) };
+      }
 
-  const info = {
-    hasTelegramWebApp: !!tg,
-    initDataLen: tg ? (tg.initData || "").length : 0,
-    initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
-    platform: tg?.platform || null,
-    version: tg?.version || null,
-    href: location.href
-  };
+      document.getElementById("out").textContent = JSON.stringify({ info, health }, null, 2);
+    }
 
-  let health = null;
-  try {
-    const r = await fetch(API + "/health", { method: "GET", mode: "cors" });
-    const text = await r.text();
-    health = {
-      ok: r.ok,
-      status: r.status,
-      text: text
-    };
-  } catch (e) {
-    health = { error: String(e) };
-  }
+    document.getElementById("btnReload").onclick = load;
+    document.getElementById("btnExpand").onclick = () => { if (tg) tg.expand(); };
 
-  document.getElementById("out").textContent = safeJson({info, health});
-}
-
-document.getElementById("btnReload").onclick = check;
-document.getElementById("btnExpand").onclick = () => {
-  const tg = window.Telegram?.WebApp || null;
-  try { tg?.expand(); } catch(e){}
-  check();
-};
-
-check();
-</script>
+    load();
+  </script>
 </body>
 </html>
