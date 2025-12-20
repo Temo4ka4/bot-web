@@ -1,8 +1,4 @@
-fetch("https://api.temo4ka4.ru/api/ping")
-  .then(r => r.json())
-  .then(j => console.log("PING", j))
-  .catch(e => alert("PING FAIL: " + e));
-
+alert("initData len = " + (Telegram?.WebApp?.initData?.length || 0));
 <!doctype html>
 <html lang="ru">
 <head>
