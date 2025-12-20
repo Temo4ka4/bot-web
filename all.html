@@ -1,4 +1,6 @@
-alert("initData len = " + (Telegram?.WebApp?.initData?.length || 0));
+const tg = window.Telegram?.WebApp || null;
+alert("tg=" + (!!tg) + " initDataLen=" + (tg?.initData?.length || 0));
+
 <!doctype html>
 <html lang="ru">
 <head>
