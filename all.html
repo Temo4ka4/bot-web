@@ -3,64 +3,82 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>DEBUG WebApp</title>
+  <title>WebApp debug</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:16px}
-    pre{white-space:pre-wrap;background:#f4f4f6;padding:12px;border-radius:12px}
+    .box{background:#f4f4f6;padding:12px;border-radius:12px;white-space:pre-wrap}
+    .h{font-weight:800;margin:0 0 10px}
+    button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+    button:active{transform:scale(.99)}
   </style>
 </head>
 <body>
-  <h3>WebApp debug</h3>
-  <pre id="out">loading...</pre>
+  <div class="h">WebApp debug</div>
+  <div id="out" class="box">loading…</div>
+  <p style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+    <button id="btnReload">Обновить данные</button>
+    <button id="btnExpand">tg.expand()</button>
+  </p>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-(async () => {
-  const pre = document.createElement("pre");
-  pre.style.whiteSpace = "pre-wrap";
-  pre.style.padding = "12px";
-  document.body.prepend(pre);
-
-  const info = {
-    hasTelegramWebApp: !!tg,
-    initDataLen: tg ? (tg.initData || "").length : 0,
-    initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
-    platform: tg?.platform || null,
-    version: tg?.version || null,
-    href: location.href
-  };
-
+(function(){
+  const out = document.getElementById("out");
   const tg = window.Telegram?.WebApp || null;
-if (tg) { tg.ready(); tg.expand(); }
 
-document.getElementById("list").innerHTML = `
-  <div class="empty">
-    <b>WebApp debug</b><br/>
-    hasTelegramWebApp=${!!tg}<br/>
-    initDataLen=${(tg?.initData?.length || 0)}<br/>
-    platform=${tg?.platform || "?"}<br/>
-    version=${tg?.version || "?"}<br/>
-    href=${location.href}
-  </div>
-`;
-
-
-  // Проверка API /health
-  let health = null;
-  try {
-    const r = await fetch("https://api.temo4ka4.ru/health", { method: "GET" });
-    health = { ok: r.ok, status: r.status, text: await r.text() };
-  } catch (e) {
-    health = { error: String(e) };
+  function safe(obj){
+    try { return JSON.stringify(obj, null, 2); }
+    catch(e){ return String(obj); }
   }
 
-  pre.textContent = JSON.stringify({ info, health }, null, 2);
+  async function fetchText(url, headers){
+    const r = await fetch(url, { method: "GET", headers: headers || {} });
+    const t = await r.text();
+    return { ok: r.ok, status: r.status, text: t.slice(0, 4000) };
+  }
 
-  // Если tg есть — скажем Telegram что мы готовы
-  if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
+  async function render(){
+    const info = {
+      hasTelegramWebApp: !!tg,
+      initDataLen: tg ? (tg.initData || "").length : 0,
+      initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
+      platform: tg?.platform || null,
+      version: tg?.version || null,
+      href: location.href
+    };
+
+    // Пингуем API без initData (просто проверить доступ/ CORS)
+    let health;
+    try {
+      health = await fetchText("https://api.temo4ka4.ru/health");
+    } catch(e) {
+      health = { error: String(e) };
+    }
+
+    // Если initData есть — пробуем авторизованный запрос
+    let homeworkRange = null;
+    if (info.initDataLen > 0) {
+      try {
+        homeworkRange = await fetchText(
+          "https://api.temo4ka4.ru/api/homework_range?days_ahead=3",
+          { "X-Telegram-InitData": tg.initData }
+        );
+      } catch(e) {
+        homeworkRange = { error: String(e) };
+      }
+    }
+
+    out.textContent = safe({ info, health, homeworkRange });
+  }
+
+  // Telegram ready/expand
+  try { tg?.ready(); tg?.expand(); } catch(e){}
+
+  document.getElementById("btnReload").onclick = render;
+  document.getElementById("btnExpand").onclick = () => { try { tg?.expand(); } catch(e){} };
+
+  render();
 })();
 </script>
-
 </body>
 </html>
