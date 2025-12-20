@@ -82,6 +82,44 @@
     document.getElementById("list").innerHTML = `<div class="empty"><b>${esc(title)}</b><br/>${esc(text)}</div>`;
   }
 
+  <script>
+  const API_BASE = "https://api.temo4ka4.ru";
+  const DAYS_AHEAD = 30;
+
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+
+  function getInitDataFallback() {
+    // Telegram может класть данные в hash или query
+    const hashParams = new URLSearchParams((location.hash || "").replace(/^#/, ""));
+    const searchParams = new URLSearchParams(location.search || "");
+
+    return (
+      (tg && tg.initData) ||
+      hashParams.get("tgWebAppData") ||
+      searchParams.get("tgWebAppData") ||
+      ""
+    );
+  }
+
+  async function apiGet(path) {
+    const initData = getInitDataFallback();
+    const r = await fetch(API_BASE + path, {
+      headers: { "X-Telegram-InitData": initData }
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  function esc(s){return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
+  function showMessage(title, text){
+    document.getElementById("list").innerHTML = `<div class="empty"><b>${esc(title)}</b><br/>${esc(text)}</div>`;
+  }
+
   function ensureTelegram(){
     if (!tg) {
       showMessage("⚠️ Открой через Telegram", "Эта страница работает при открытии из бота.");
@@ -89,6 +127,34 @@
     }
     return true;
   }
+
+  (async ()=>{
+    if (!ensureTelegram()) return;
+
+    const initData = getInitDataFallback();
+
+    // 🔥 важная диагностика: покажем, есть ли tgWebAppData вообще
+    // (потом уберёшь)
+    // showMessage("DEBUG", "initData len=" + initData.length + "\n" + "href=" + location.href);
+
+    if (!initData) {
+      showMessage(
+        "⚠️ Нет данных Telegram",
+        "Telegram открыл WebView, но не передал tgWebAppData/initData. Это НЕ проблема ДЗ, это проблема запуска WebApp без initData."
+      );
+      return;
+    }
+
+    try{
+      const data = await apiGet(`/api/homework_range?days_ahead=${DAYS_AHEAD}`);
+      // дальше как у тебя...
+      render(data.days||[]);
+    }catch(e){
+      showMessage("🔌 Сервер/API ошибка", "API вернул ошибку. Открой консоль/логи и посмотри текст ошибки.");
+    }
+  })();
+</script>
+
 
   function render(days){
     const root=document.getElementById("list");
