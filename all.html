@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Все ДЗ</title>
 
-  <!-- ВАЖНО: без этого Telegram.WebApp не будет работать -->
+  <!-- ВАЖНО: без этого Telegram.WebApp не появится -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -29,15 +29,11 @@
     .empty{padding:22px;border:1px dashed var(--border);border-radius:18px;color:var(--muted);text-align:center}
   </style>
 </head>
-
 <body>
   <div class="top">
     <div class="title">🗂 Все ДЗ</div>
     <div class="sp"></div>
-    <div class="toggle" id="toggle">
-      <span>Тема</span>
-      <div class="switch"><div class="knob"></div></div>
-    </div>
+    <div class="toggle" id="toggle"><span>Тема</span><div class="switch"><div class="knob"></div></div></div>
   </div>
 
   <div class="wrap">
@@ -49,80 +45,63 @@
   const API_BASE = "https://api.temo4ka4.ru";
   const DAYS_AHEAD = 30;
 
-  function esc(s){
-    return (s||"")
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;");
+  const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+
+  if (tg) {
+    tg.ready();
+    tg.expand();
+  }
+
+  function tgInitData() {
+    return tg ? (tg.initData || "") : "";
+  }
+
+  async function apiGet(path) {
+    const r = await fetch(API_BASE + path, {
+      headers: { "X-Telegram-InitData": tgInitData() }
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
   }
 
   function setTheme(theme){
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }
-
-  // По умолчанию СВЕТЛАЯ тема
   const savedTheme = localStorage.getItem("theme");
   if (savedTheme === "dark") setTheme("dark");
   else setTheme("light");
 
   document.getElementById("toggle").onclick = () => {
-    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    const cur = document.documentElement.getAttribute("data-theme");
     setTheme(cur === "light" ? "dark" : "light");
   };
 
+  function esc(s){return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
   function showMessage(title, text){
-    document.getElementById("list").innerHTML =
-      `<div class="empty"><b>${esc(title)}</b><br/>${esc(text)}</div>`;
-  }
-
-  const tg = (window.Telegram && Telegram.WebApp) ? Telegram.WebApp : null;
-  if (tg) {
-    tg.ready();
-    // tg.expand(); // если хочешь, чтобы раскрывалось на весь экран
+    document.getElementById("list").innerHTML = `<div class="empty"><b>${esc(title)}</b><br/>${esc(text)}</div>`;
   }
 
   function ensureTelegram(){
-    // важно: initData может быть строкой, но главное что tg существует и initData не пустой
-    if (!tg || !tg.initData) {
+    if (!tg) {
       showMessage("⚠️ Открой через Telegram", "Эта страница работает при открытии из бота.");
       return false;
     }
     return true;
   }
 
-  async function safeFetch(path){
-    if (!ensureTelegram()) throw new Error("NO_TELEGRAM");
-    try{
-      const r = await fetch(API_BASE + path, {
-        headers: { "X-Telegram-InitData": tg.initData }
-      });
-      if(!r.ok) throw new Error(await r.text());
-      return await r.json();
-    }catch(e){
-      showMessage("🔌 Сервер недоступен", "API не отвечает или CORS/домен не настроен. Попробуй позже.");
-      throw e;
-    }
-  }
-
   function render(days){
-    const root = document.getElementById("list");
-    root.innerHTML = "";
-
+    const root=document.getElementById("list");
+    root.innerHTML="";
     if(!days.length){
       root.innerHTML = `<div class="empty">В ближайшие ${DAYS_AHEAD} дней ДЗ пока нет.</div>`;
       return;
     }
-
     for(const d of days){
       root.insertAdjacentHTML("beforeend", `<div class="day">📅 ${esc(d.day)}</div>`);
-
       for(const it of d.items){
         const subj = it.subject?.trim() ? it.subject.trim() : "Общее";
-        const files = (it.files_count > 0)
-          ? `<div class="hint">📎 Есть файлы (${it.files_count}). Если нужно — открой ДЗ в боте.</div>`
-          : "";
-
+        const files = it.files_count>0 ? `<div class="hint">📎 Есть файлы (${it.files_count}). Если нужно — открой ДЗ в боте.</div>` : "";
         root.insertAdjacentHTML("beforeend", `
           <div class="card">
             <div class="subj">${esc(subj)} —</div>
@@ -135,14 +114,24 @@
   }
 
   (async ()=>{
+    if (!ensureTelegram()) return;
+
+    // Если initData вдруг пустая — API, скорее всего, не пропустит. Скажем честно.
+    if (!tgInitData()) {
+      showMessage("⚠️ Нет данных Telegram", "Похоже, Telegram не передал initData. Открой страницу через кнопку WebApp в боте ещё раз.");
+      return;
+    }
+
     try{
-      const data = await safeFetch(`/api/homework_range?days_ahead=${DAYS_AHEAD}`);
-      if(data?.error === "no_class"){
-        showMessage("ℹ️ Ты не в классе", "Вступи в класс в боте, чтобы смотреть ДЗ.");
+      const data = await apiGet(`/api/homework_range?days_ahead=${DAYS_AHEAD}`);
+      if(data?.error==="no_class"){
+        showMessage("ℹ️ Ты не в классе","Вступи в класс в боте, чтобы смотреть ДЗ.");
         return;
       }
-      render(data.days || []);
-    }catch(_){}
+      render(data.days||[]);
+    }catch(e){
+      showMessage("🔌 Сервер/API ошибка", "Проверь API и попробуй ещё раз.");
+    }
   })();
 </script>
 </body>
