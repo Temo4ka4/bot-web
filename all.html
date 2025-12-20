@@ -7,78 +7,52 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:16px}
-    .box{background:#f4f4f6;padding:12px;border-radius:12px;white-space:pre-wrap}
-    .h{font-weight:800;margin:0 0 10px}
-    button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
-    button:active{transform:scale(.99)}
+    pre{white-space:pre-wrap;background:#f4f4f6;padding:12px;border-radius:12px}
+    .err{color:#b00020}
   </style>
 </head>
 <body>
-  <div class="h">WebApp debug</div>
-  <div id="out" class="box">loading…</div>
-  <p style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-    <button id="btnReload">Обновить данные</button>
-    <button id="btnExpand">tg.expand()</button>
-  </p>
+  <h3>WebApp debug</h3>
+  <pre id="out">loading...</pre>
 
 <script>
-(function(){
+(async () => {
   const out = document.getElementById("out");
+
   const tg = window.Telegram?.WebApp || null;
+  if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
 
-  function safe(obj){
-    try { return JSON.stringify(obj, null, 2); }
-    catch(e){ return String(obj); }
-  }
+  const info = {
+    hasTelegramWebApp: !!tg,
+    initDataLen: tg ? (tg.initData || "").length : 0,
+    platform: tg?.platform || null,
+    version: tg?.version || null,
+    href: location.href
+  };
 
-  async function fetchText(url, headers){
-    const r = await fetch(url, { method: "GET", headers: headers || {} });
-    const t = await r.text();
-    return { ok: r.ok, status: r.status, text: t.slice(0, 4000) };
-  }
-
-  async function render(){
-    const info = {
-      hasTelegramWebApp: !!tg,
-      initDataLen: tg ? (tg.initData || "").length : 0,
-      initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
-      platform: tg?.platform || null,
-      version: tg?.version || null,
-      href: location.href
-    };
-
-    // Пингуем API без initData (просто проверить доступ/ CORS)
-    let health;
+  async function testFetch(url, headers) {
     try {
-      health = await fetchText("https://api.temo4ka4.ru/health");
-    } catch(e) {
-      health = { error: String(e) };
+      const r = await fetch(url, { method: "GET", headers: headers || {} });
+      const text = await r.text();
+      return { ok: r.ok, status: r.status, text };
+    } catch (e) {
+      return { error: String(e) };
     }
-
-    // Если initData есть — пробуем авторизованный запрос
-    let homeworkRange = null;
-    if (info.initDataLen > 0) {
-      try {
-        homeworkRange = await fetchText(
-          "https://api.temo4ka4.ru/api/homework_range?days_ahead=3",
-          { "X-Telegram-InitData": tg.initData }
-        );
-      } catch(e) {
-        homeworkRange = { error: String(e) };
-      }
-    }
-
-    out.textContent = safe({ info, health, homeworkRange });
   }
 
-  // Telegram ready/expand
-  try { tg?.ready(); tg?.expand(); } catch(e){}
+  const health = await testFetch("https://api.temo4ka4.ru/health");
 
-  document.getElementById("btnReload").onclick = render;
-  document.getElementById("btnExpand").onclick = () => { try { tg?.expand(); } catch(e){} };
+  // тест с initData (если есть)
+  const initData = tg?.initData || "";
+  const hw = initData
+    ? await testFetch("https://api.temo4ka4.ru/api/homework_range?days_ahead=3", {
+        "X-Telegram-InitData": initData
+      })
+    : { skipped: "initData empty" };
 
-  render();
+  out.textContent = JSON.stringify({ info, health, hw }, null, 2);
 })();
 </script>
+
 </body>
 </html>
