@@ -8,51 +8,58 @@
   <style>
     body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:16px}
     pre{white-space:pre-wrap;background:#f4f4f6;padding:12px;border-radius:12px}
-    .err{color:#b00020}
+    button{padding:10px 12px;border-radius:10px;border:0;background:#eee;cursor:pointer;margin-right:8px}
   </style>
 </head>
 <body>
   <h3>WebApp debug</h3>
   <pre id="out">loading...</pre>
+  <div style="margin-top:12px">
+    <button id="btnReload">Обновить данные</button>
+    <button id="btnExpand">tg.expand()</button>
+  </div>
 
 <script>
 (async () => {
   const out = document.getElementById("out");
-
   const tg = window.Telegram?.WebApp || null;
-  if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
 
-  const info = {
-    hasTelegramWebApp: !!tg,
-    initDataLen: tg ? (tg.initData || "").length : 0,
-    platform: tg?.platform || null,
-    version: tg?.version || null,
-    href: location.href
-  };
-
-  async function testFetch(url, headers) {
-    try {
-      const r = await fetch(url, { method: "GET", headers: headers || {} });
-      const text = await r.text();
-      return { ok: r.ok, status: r.status, text };
-    } catch (e) {
-      return { error: String(e) };
-    }
+  if (tg) {
+    try { tg.ready(); tg.expand(); } catch(e) {}
   }
 
-  const health = await testFetch("https://api.temo4ka4.ru/health");
+  async function load() {
+    const info = {
+      hasTelegramWebApp: !!tg,
+      initDataLen: tg ? (tg.initData || "").length : 0,
+      initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
+      platform: tg?.platform || null,
+      version: tg?.version || null,
+      href: location.href
+    };
 
-  // тест с initData (если есть)
-  const initData = tg?.initData || "";
-  const hw = initData
-    ? await testFetch("https://api.temo4ka4.ru/api/homework_range?days_ahead=3", {
-        "X-Telegram-InitData": initData
-      })
-    : { skipped: "initData empty" };
+    let health;
+    try {
+      const r = await fetch("https://api.temo4ka4.ru/health", {
+        method: "GET",
+        headers: {
+          // ВАЖНО: в реальных запросах к API ты будешь слать initData вот так:
+          // "X-Telegram-InitData": tg?.initData || ""
+        }
+      });
+      health = { ok: r.ok, status: r.status, text: await r.text() };
+    } catch (e) {
+      health = { error: String(e) };
+    }
 
-  out.textContent = JSON.stringify({ info, health, hw }, null, 2);
+    out.textContent = JSON.stringify({ info, health }, null, 2);
+  }
+
+  document.getElementById("btnReload").onclick = load;
+  document.getElementById("btnExpand").onclick = () => { try { tg?.expand(); } catch(e){} };
+
+  await load();
 })();
 </script>
-
 </body>
 </html>
