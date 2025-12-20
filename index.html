@@ -1,35 +1,1147 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>temo4ka4.ru</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>ДЗ • WebApp</title>
+
   <style>
-    body {
+    :root{
+      --bg: #f4f5f7;
+      --surface: rgba(255,255,255,.75);
+      --surface-strong: #ffffff;
+      --text: #0f172a;
+      --muted: rgba(15, 23, 42, .62);
+      --line: rgba(15, 23, 42, .10);
+      --shadow: 0 18px 50px rgba(0,0,0,.10);
+      --shadow-soft: 0 10px 30px rgba(0,0,0,.08);
+      --accent: #007aff;
+      --accent-2: #5ac8fa;
+      --good: #34c759;
+      --warn: #ff9500;
+      --bad: #ff3b30;
+      --radius: 18px;
+      --radius2: 24px;
+
+      --tap: rgba(0, 122, 255, .12);
+      --chip: rgba(0,0,0,.06);
+      --chip2: rgba(0,0,0,.10);
+
+      --sidebar-w: 320px;
+      --max-w: 1200px;
+
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
+      --safe-right: env(safe-area-inset-right);
+    }
+
+    html[data-theme="dark"]{
+      --bg: #0b1020;
+      --surface: rgba(18, 24, 42, .65);
+      --surface-strong: #12182a;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --line: rgba(255,255,255,.10);
+      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --shadow-soft: 0 10px 30px rgba(0,0,0,.40);
+
+      --tap: rgba(90,200,250,.16);
+      --chip: rgba(255,255,255,.08);
+      --chip2: rgba(255,255,255,.12);
+    }
+
+    *{ box-sizing: border-box; }
+    body{
       margin: 0;
-      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(900px 450px at 15% 10%, rgba(0,122,255,.18), transparent 55%),
+        radial-gradient(700px 380px at 85% 20%, rgba(90,200,250,.22), transparent 55%),
+        radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100svh;
+      padding: calc(16px + var(--safe-top)) calc(16px + var(--safe-right)) calc(16px + var(--safe-bot)) calc(16px + var(--safe-left));
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .app{
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      border: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .sidebar{
+      position: sticky;
+      top: calc(16px + var(--safe-top));
+      padding: 18px;
+    }
+
+    @media (max-width: 980px){
+      .sidebar{ position: relative; top: 0; }
+    }
+
+    .brand{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .logo{
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background:
+        radial-gradient(12px 12px at 25% 35%, rgba(255,255,255,.9), rgba(255,255,255,0) 55%),
+        linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 25px rgba(0,122,255,.20);
       display: grid;
       place-items: center;
-      background: #0b1220;
       color: #fff;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      user-select: none;
     }
-    .card {
-      max-width: 720px;
-      padding: 28px;
+
+    .brand h1{
+      font-size: 16px;
+      margin: 0;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+    }
+    .brand p{
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .section-title{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin: 14px 2px 10px;
+    }
+
+    .pill{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 12px;
       border-radius: 16px;
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.12);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
     }
-    h1 { margin: 0 0 10px; }
-    p { margin: 6px 0; opacity: .85; }
+
+    .pill .left{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .icon{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      user-select: none;
+    }
+
+    .pill .meta{
+      min-width: 0;
+    }
+
+    .pill .meta .t{
+      font-size: 13px;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pill .meta .s{
+      font-size: 12px;
+      margin: 2px 0 0 0;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* iOS-like switch */
+    .switch{
+      position: relative;
+      width: 52px;
+      height: 30px;
+      flex: 0 0 auto;
+    }
+    .switch input{
+      appearance: none;
+      -webkit-appearance: none;
+      width: 52px;
+      height: 30px;
+      margin: 0;
+      border-radius: 999px;
+      background: var(--chip2);
+      border: 1px solid var(--line);
+      outline: none;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+    .switch input:checked{
+      background: rgba(0,122,255,.85);
+      border-color: rgba(0,122,255,.55);
+    }
+    .switch .knob{
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #fff;
+      box-shadow: 0 10px 20px rgba(0,0,0,.20);
+      transition: .18s ease;
+      pointer-events: none;
+    }
+    .switch input:checked + .knob{ transform: translateX(22px); }
+
+    .hint{
+      margin: 12px 2px 0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .main{
+      padding: 14px;
+    }
+
+    .topbar{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 6px 12px;
+    }
+    .topbar .title{
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .topbar h2{
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+    .topbar .sub{
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chip{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .tabs{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+    }
+    .tabs::-webkit-scrollbar{ display: none; }
+    .tab{
+      scroll-snap-align: start;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: .15s ease;
+      user-select: none;
+    }
+    .tab:active{ background: var(--tap); }
+    .tab[data-active="true"]{
+      background: var(--surface-strong);
+      border-color: var(--line);
+      color: var(--text);
+      box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    }
+
+    .pages{
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius2);
+    }
+    .pages::-webkit-scrollbar{ display: none; }
+
+    .page{
+      scroll-snap-align: start;
+      flex: 0 0 100%;
+      min-width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: var(--radius2);
+      padding: 14px;
+    }
+
+    .page-head{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .page-head h3{
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: -0.2px;
+    }
+    .page-head .note{
+      font-size: 12px;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .skeleton{
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      background: rgba(255,255,255,.04);
+    }
+
+    .hw-list{
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .hw-card{
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      box-shadow: 0 12px 28px rgba(0,0,0,.06);
+      padding: 12px 12px;
+    }
+    .hw-top{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .hw-title{
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: -0.2px;
+      line-height: 1.25;
+    }
+    .hw-date{
+      margin: 2px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .hw-text{
+      margin: 10px 0 0;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .badge{
+      flex: 0 0 auto;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .badge.good{ color: var(--good); border-color: rgba(52,199,89,.35); background: rgba(52,199,89,.10); }
+    .badge.warn{ color: var(--warn); border-color: rgba(255,149,0,.35); background: rgba(255,149,0,.10); }
+
+    .row{
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 10px;
+    }
+    @media (max-width: 560px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    .field{
+      display: grid;
+      gap: 6px;
+    }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input[type="date"], input[type="text"], textarea{
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      padding: 12px 12px;
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+    }
+    textarea{
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.4;
+    }
+
+    .btns{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn{
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 11px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      transition: .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn.primary{
+      border-color: rgba(0,122,255,.45);
+      background: rgba(0,122,255,.14);
+      color: var(--text);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-bot));
+      transform: translateX(-50%);
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.78);
+      color: #fff;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: .18s ease;
+      max-width: calc(100vw - 26px);
+      text-align: center;
+    }
+    html[data-theme="dark"] .toast{ background: rgba(255,255,255,.12); color: rgba(255,255,255,.92); border: 1px solid rgba(255,255,255,.12); }
+    .toast.show{ opacity: 1; }
+
+    .small{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 10px 0 0;
+    }
   </style>
 </head>
+
 <body>
-  <div class="card">
-    <h1>Сайт для Telegram-бота</h1>
-    <p>Домен подключён, GitHub Pages работает.</p>
-    <p>Следующий шаг — подключение API и данных в реальном времени.</p>
+  <div class="app">
+    <!-- LEFT -->
+    <aside class="card sidebar">
+      <div class="brand">
+        <div class="logo">DZ</div>
+        <div>
+          <h1>Домашка • WebApp</h1>
+          <p id="who">подключение…</p>
+        </div>
+      </div>
+
+      <div class="section-title">Разделы</div>
+
+      <div class="pill">
+        <div class="left">
+          <div class="icon">🎨</div>
+          <div class="meta">
+            <p class="t">Тема</p>
+            <p class="s">Светлая / Тёмная</p>
+          </div>
+        </div>
+
+        <div class="switch" title="Переключить тему">
+          <input id="themeToggle" type="checkbox" aria-label="Тёмная тема">
+          <span class="knob"></span>
+        </div>
+      </div>
+
+      <p class="hint">
+        Свайпай вкладки справа. Тема запоминается на устройстве.
+        Если открыть приложение снова — будет выбранная тема.
+      </p>
+
+      <div class="section-title">Состояние</div>
+
+      <div class="pill">
+        <div class="left">
+          <div class="icon">📡</div>
+          <div class="meta">
+            <p class="t" id="apiState">API: не проверено</p>
+            <p class="s" id="apiBase">—</p>
+          </div>
+        </div>
+        <span class="badge" id="apiBadge">…</span>
+      </div>
+
+      <p class="hint" id="initHint">
+        Если ты открыл это не из Telegram-кнопки — данные пользователя могут быть недоступны.
+      </p>
+    </aside>
+
+    <!-- RIGHT -->
+    <main class="card main">
+      <div class="topbar">
+        <div class="title">
+          <h2>Домашнее задание</h2>
+          <p class="sub" id="subline">Листай вкладки • всё в одном месте</p>
+        </div>
+
+        <span class="chip" id="todayChip">📅 —</span>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <button class="tab" data-index="0" data-active="true">📆 На завтра</button>
+        <button class="tab" data-index="1">📅 На сегодня</button>
+        <button class="tab" data-index="2">🔎 Выбрать дату</button>
+        <button class="tab" data-index="3">🗂 Показать всё ДЗ</button>
+        <button class="tab" data-index="4">✉️ Предложить ДЗ</button>
+      </div>
+
+      <div class="pages" id="pages">
+        <!-- 0: tomorrow -->
+        <section class="page" data-index="0">
+          <div class="page-head">
+            <div>
+              <h3>На завтра</h3>
+              <p class="note" id="tomorrowNote">—</p>
+            </div>
+            <span class="badge warn" id="tomorrowCount">0</span>
+          </div>
+          <div class="hw-list" id="tomorrowList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 1: today -->
+        <section class="page" data-index="1">
+          <div class="page-head">
+            <div>
+              <h3>На сегодня</h3>
+              <p class="note" id="todayNote">—</p>
+            </div>
+            <span class="badge warn" id="todayCount">0</span>
+          </div>
+          <div class="hw-list" id="todayList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 2: pick date -->
+        <section class="page" data-index="2">
+          <div class="page-head">
+            <div>
+              <h3>Выбрать дату</h3>
+              <p class="note">Выбирай день и смотри ДЗ</p>
+            </div>
+            <span class="badge" id="pickCount">—</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="pickDate">Дата</label>
+              <input id="pickDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Действия</label>
+              <div class="btns" style="margin-top: 2px;">
+                <button class="btn primary" id="pickLoad">🔍 Показать</button>
+                <button class="btn" id="pickToday">📅 Сегодня</button>
+                <button class="btn" id="pickTomorrow">📆 Завтра</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="hw-list" id="pickList" style="margin-top: 12px;">
+            <div class="skeleton">Выбери дату и нажми “Показать”.</div>
+          </div>
+        </section>
+
+        <!-- 3: all -->
+        <section class="page" data-index="3">
+          <div class="page-head">
+            <div>
+              <h3>Показать всё ДЗ</h3>
+              <p class="note">По дням, аккуратно карточками</p>
+            </div>
+            <span class="badge" id="allCount">—</span>
+          </div>
+
+          <div class="btns">
+            <button class="btn primary" id="reloadAll">🔄 Обновить</button>
+            <button class="btn" id="jumpToday">📅 К сегодня</button>
+            <button class="btn" id="jumpTomorrow">📆 К завтра</button>
+          </div>
+
+          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон (обычно ~60 дней), чтобы не душить базу.</p>
+
+          <div class="hw-list" id="allList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 4: suggest -->
+        <section class="page" data-index="4">
+          <div class="page-head">
+            <div>
+              <h3>Предложить ДЗ</h3>
+              <p class="note">Отправим в бота предложением</p>
+            </div>
+            <span class="badge good">✨</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="sDate">Дата</label>
+              <input id="sDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="sSubject">Предмет</label>
+              <input id="sSubject" type="text" placeholder="Например: Алгебра" />
+            </div>
+          </div>
+
+          <div class="field" style="margin-top: 10px;">
+            <label for="sText">Текст ДЗ</label>
+            <textarea id="sText" placeholder="Например: №123 (1-5), подготовить правило…"></textarea>
+          </div>
+
+          <div class="btns">
+            <button class="btn primary" id="sendSuggest">✉️ Отправить</button>
+            <button class="btn" id="clearSuggest">🧽 Очистить</button>
+          </div>
+
+          <p class="small">
+            Технически: я отправляю данные через <b>Telegram.WebApp.sendData()</b>.
+            На стороне бота/сервера это можно обработать как “предложение ДЗ”.
+          </p>
+        </section>
+      </div>
+    </main>
   </div>
+
+  <div class="toast" id="toast">готово</div>
+
+  <script>
+    // ================= THEME (default light + persistence) =================
+    const THEME_KEY = "dz_webapp_theme"; // "light" | "dark"
+
+    function applyTheme(theme) {
+      const root = document.documentElement;
+      const isDark = theme === "dark";
+      root.dataset.theme = isDark ? "dark" : "light";
+      document.getElementById("themeToggle").checked = isDark;
+
+      // theme-color for mobile
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", isDark ? "#0b1020" : "#ffffff");
+    }
+
+    function loadTheme() {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved === "dark" || saved === "light") return saved;
+      return "light";
+    }
+
+    function saveTheme(theme) {
+      localStorage.setItem(THEME_KEY, theme);
+    }
+
+    applyTheme(loadTheme());
+
+    document.getElementById("themeToggle").addEventListener("change", (e) => {
+      const theme = e.target.checked ? "dark" : "light";
+      applyTheme(theme);
+      saveTheme(theme);
+      toast(theme === "dark" ? "Тёмная тема включена" : "Светлая тема включена");
+    });
+
+    // ================= SMALL UTILS =================
+    function toast(msg){
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1300);
+    }
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function toISODate(d){
+      return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+    }
+
+    function formatRu(d){
+      const opts = { day:"2-digit", month:"2-digit", year:"numeric" };
+      return new Intl.DateTimeFormat("ru-RU", opts).format(d);
+    }
+
+    function escapeHtml(s){
+      return (s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+
+    // ================= TELEGRAM WEBAPP =================
+    const tg = window.Telegram?.WebApp || null;
+
+    function getInitData(){
+      // In Telegram WebApp it exists, otherwise empty
+      return tg?.initData || "";
+    }
+
+    function getUserLabel(){
+      const u = tg?.initDataUnsafe?.user;
+      if (!u) return "Гость";
+      const name = [u.first_name, u.last_name].filter(Boolean).join(" ");
+      const uname = u.username ? ("@" + u.username) : "";
+      return (name || uname || ("id:" + u.id)).trim();
+    }
+
+    // ================= API (homework_range) =================
+    // Поставь сюда адрес своего API (FastAPI), если он НЕ на том же домене.
+    // Если API и HTML на одном домене — можно оставить пустым.
+    const API_BASE = ""; // пример: "https://yourdomain.com"
+    document.getElementById("apiBase").textContent = API_BASE ? API_BASE : "(тот же домен)";
+
+    async function apiHealth(){
+      try{
+        const r = await fetch((API_BASE || "") + "/health", { method:"GET" });
+        if (!r.ok) throw new Error("bad status " + r.status);
+        return true;
+      }catch(e){
+        return false;
+      }
+    }
+
+    async function apiHomeworkRange(daysAhead = 60){
+      const initData = getInitData();
+      if (!initData) throw new Error("no_initData");
+
+      const url = (API_BASE || "") + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
+      const r = await fetch(url, {
+        method: "GET",
+        headers: {
+          "X-Telegram-InitData": initData
+        }
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        const msg = data?.detail || data?.error || ("HTTP " + r.status);
+        throw new Error(msg);
+      }
+      // ожидаем объект вида { by_day: { "YYYY-MM-DD": ["Алгебра — ...", ...] } } или похожий
+      return data;
+    }
+
+    function normalizeByDay(apiData){
+      // твой API может вернуть по-разному — тут максимально мягкий парсер
+      // варианты:
+      // 1) { by_day: { date: [..] } }
+      // 2) { days: { date: [..] } }
+      // 3) { date: [..] }
+      if (!apiData || typeof apiData !== "object") return {};
+      if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
+      if (apiData.days && typeof apiData.days === "object") return apiData.days;
+
+      // fallback: если сверху сразу даты
+      const keys = Object.keys(apiData);
+      if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
+
+      return {};
+    }
+
+    function renderCards(listEl, dateISO, items){
+      listEl.innerHTML = "";
+
+      if (!items || !items.length){
+        listEl.innerHTML = `<div class="skeleton">На <b>${escapeHtml(dateISO)}</b> пока нет домашки.</div>`;
+        return 0;
+      }
+
+      const cards = items.map((line) => {
+        // line can be string or object
+        const text = (typeof line === "string") ? line : (line?.text ?? JSON.stringify(line));
+        // subject parsing: "Алгебра — ..." or "Алгебра - ..."
+        let title = "Домашка";
+        let body = text;
+        const m = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
+        if (m){
+          title = m[1].trim();
+          body = m[2].trim();
+        }
+        return `
+          <article class="hw-card">
+            <div class="hw-top">
+              <div>
+                <p class="hw-title">${escapeHtml(title)}</p>
+                <p class="hw-date">${escapeHtml(dateISO)}</p>
+              </div>
+              <span class="badge">${escapeHtml(title)}</span>
+            </div>
+            <p class="hw-text">${escapeHtml(body)}</p>
+          </article>
+        `;
+      }).join("");
+
+      listEl.innerHTML = cards;
+      return items.length;
+    }
+
+    function renderGroupedAll(listEl, byDay){
+      listEl.innerHTML = "";
+      const dates = Object.keys(byDay).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+      if (!dates.length){
+        listEl.innerHTML = `<div class="skeleton">Пока нет ни одной записи ДЗ в диапазоне.</div>`;
+        return 0;
+      }
+
+      let total = 0;
+      const html = dates.map((d) => {
+        const items = byDay[d] || [];
+        total += Array.isArray(items) ? items.length : 0;
+
+        const inner = (Array.isArray(items) && items.length)
+          ? items.map((line) => {
+              const text = (typeof line === "string") ? line : (line?.text ?? JSON.stringify(line));
+              const m = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
+              const title = m ? m[1].trim() : "Домашка";
+              const body  = m ? m[2].trim() : text;
+              return `
+                <article class="hw-card" style="margin-top:10px;">
+                  <div class="hw-top">
+                    <div>
+                      <p class="hw-title">${escapeHtml(title)}</p>
+                      <p class="hw-date">${escapeHtml(d)}</p>
+                    </div>
+                    <span class="badge">${escapeHtml(title)}</span>
+                  </div>
+                  <p class="hw-text">${escapeHtml(body)}</p>
+                </article>
+              `;
+            }).join("")
+          : `<div class="skeleton">На этот день записей нет.</div>`;
+
+        return `
+          <section style="margin-top:12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-weight:700; font-size:14px; letter-spacing:-.2px;">${escapeHtml(d)}</div>
+                <div style="font-size:12px;color:var(--muted); margin-top:2px;">${escapeHtml(prettyDateLabel(d))}</div>
+              </div>
+              <span class="badge ${Array.isArray(items)&&items.length ? "warn" : ""}">
+                ${(Array.isArray(items)?items.length:0)}
+              </span>
+            </div>
+            ${inner}
+          </section>
+        `;
+      }).join("");
+
+      listEl.innerHTML = html;
+      return total;
+    }
+
+    function prettyDateLabel(iso){
+      try{
+        const [y,m,d] = iso.split("-").map(Number);
+        const dt = new Date(y, m-1, d);
+        const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
+        const nice = formatRu(dt);
+        return `${weekday}, ${nice}`;
+      }catch(e){
+        return iso;
+      }
+    }
+
+    // ================= TABS + PAGES (scroll sync) =================
+    const tabsEl = document.getElementById("tabs");
+    const pagesEl = document.getElementById("pages");
+    const tabBtns = Array.from(document.querySelectorAll(".tab"));
+
+    function setActiveTab(i){
+      tabBtns.forEach(b => b.dataset.active = (Number(b.dataset.index) === i) ? "true" : "false");
+    }
+
+    function scrollToPage(i){
+      const w = pagesEl.clientWidth;
+      pagesEl.scrollTo({ left: i * w, behavior: "smooth" });
+      setActiveTab(i);
+      // keep tab visible
+      const btn = tabBtns.find(b => Number(b.dataset.index) === i);
+      if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
+    }
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => scrollToPage(Number(btn.dataset.index)));
+    });
+
+    let scrollTimer = null;
+    pagesEl.addEventListener("scroll", () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+        setActiveTab(i);
+        const btn = tabBtns.find(b => Number(b.dataset.index) === i);
+        if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
+      }, 80);
+    });
+
+    // ================= DATA LOADING =================
+    const now = new Date();
+    const todayISO = toISODate(now);
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrowISO = toISODate(tomorrow);
+
+    document.getElementById("todayChip").textContent = "📅 " + formatRu(now);
+    document.getElementById("tomorrowNote").textContent = prettyDateLabel(tomorrowISO);
+    document.getElementById("todayNote").textContent = prettyDateLabel(todayISO);
+
+    const pickDateEl = document.getElementById("pickDate");
+    const sDateEl = document.getElementById("sDate");
+    pickDateEl.value = todayISO;
+    sDateEl.value = todayISO;
+
+    function setApiBadge(ok){
+      const badge = document.getElementById("apiBadge");
+      const state = document.getElementById("apiState");
+      if (ok){
+        badge.textContent = "OK";
+        badge.className = "badge good";
+        state.textContent = "API: работает";
+      }else{
+        badge.textContent = "OFF";
+        badge.className = "badge";
+        state.textContent = "API: недоступно";
+      }
+    }
+
+    function setWho(){
+      const who = document.getElementById("who");
+      if (tg){
+        who.textContent = "Пользователь: " + getUserLabel();
+        document.getElementById("initHint").style.display = "none";
+      }else{
+        who.textContent = "Открыто вне Telegram";
+      }
+    }
+    setWho();
+
+    let cacheByDay = null;
+
+    async function loadAll(){
+      const tomorrowList = document.getElementById("tomorrowList");
+      const todayList = document.getElementById("todayList");
+      const allList = document.getElementById("allList");
+
+      tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      todayList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+
+      try{
+        const data = await apiHomeworkRange(60);
+        const byDay = normalizeByDay(data);
+        cacheByDay = byDay;
+
+        // today / tomorrow
+        const cToday = renderCards(todayList, todayISO, byDay[todayISO] || []);
+        const cTom   = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
+        document.getElementById("todayCount").textContent = String(cToday);
+        document.getElementById("tomorrowCount").textContent = String(cTom);
+
+        // all
+        const total = renderGroupedAll(allList, byDay);
+        document.getElementById("allCount").textContent = String(total);
+
+        toast("Данные обновлены");
+      }catch(e){
+        const msg = (e && e.message) ? e.message : String(e);
+        const pretty = (msg === "no_initData")
+          ? "Нет initData. Открой из Telegram-кнопки."
+          : ("Ошибка загрузки: " + msg);
+
+        tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        todayList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+
+        document.getElementById("todayCount").textContent = "0";
+        document.getElementById("tomorrowCount").textContent = "0";
+        document.getElementById("allCount").textContent = "—";
+      }
+    }
+
+    async function loadPick(dateISO){
+      const pickList = document.getElementById("pickList");
+      pickList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        if (!cacheByDay){
+          const data = await apiHomeworkRange(60);
+          cacheByDay = normalizeByDay(data);
+        }
+        const items = cacheByDay[dateISO] || [];
+        const cnt = renderCards(pickList, dateISO, items);
+        document.getElementById("pickCount").textContent = String(cnt);
+      }catch(e){
+        const msg = (e && e.message) ? e.message : String(e);
+        pickList.innerHTML = `<div class="skeleton">Ошибка: ${escapeHtml(msg)}</div>`;
+        document.getElementById("pickCount").textContent = "—";
+      }
+    }
+
+    // Buttons
+    document.getElementById("pickLoad").addEventListener("click", () => {
+      loadPick(pickDateEl.value);
+    });
+    document.getElementById("pickToday").addEventListener("click", () => {
+      pickDateEl.value = todayISO;
+      loadPick(todayISO);
+    });
+    document.getElementById("pickTomorrow").addEventListener("click", () => {
+      pickDateEl.value = tomorrowISO;
+      loadPick(tomorrowISO);
+    });
+
+    document.getElementById("reloadAll").addEventListener("click", () => loadAll());
+    document.getElementById("jumpToday").addEventListener("click", () => {
+      toast("Сегодня: " + todayISO);
+      // просто подсветим в списке — точный скролл по секции не делаю, чтобы не ломать разметку
+      scrollToPage(3);
+    });
+    document.getElementById("jumpTomorrow").addEventListener("click", () => {
+      toast("Завтра: " + tomorrowISO);
+      scrollToPage(3);
+    });
+
+    // Suggest: sendData to bot
+    document.getElementById("sendSuggest").addEventListener("click", () => {
+      const payload = {
+        action: "suggest_hw",
+        date: document.getElementById("sDate").value || todayISO,
+        subject: (document.getElementById("sSubject").value || "").trim(),
+        text: (document.getElementById("sText").value || "").trim()
+      };
+
+      if (!payload.subject || !payload.text){
+        toast("Заполни предмет и текст");
+        return;
+      }
+
+      if (tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
+        toast("Отправлено в бота");
+        // можно закрыть:
+        // tg.close();
+      }else{
+        // вне TG
+        console.log("Suggest payload:", payload);
+        toast("Открыто вне Telegram");
+      }
+    });
+
+    document.getElementById("clearSuggest").addEventListener("click", () => {
+      document.getElementById("sSubject").value = "";
+      document.getElementById("sText").value = "";
+      toast("Очищено");
+    });
+
+    // Init: api check + load data
+    (async () => {
+      const ok = await apiHealth();
+      setApiBadge(ok);
+
+      // Пробуем подтянуть ДЗ (если initData есть)
+      await loadAll();
+
+      // сразу подгрузим выбранную дату (сегодня) в "Выбрать дату"
+      await loadPick(todayISO);
+
+      // tg UI hints
+      if (tg){
+        try{
+          tg.ready();
+          // можно чуть расширить на мобилке
+          tg.expand();
+        }catch(e){}
+      }
+    })();
+  </script>
 </body>
 </html>
