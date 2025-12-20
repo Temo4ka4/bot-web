@@ -69,6 +69,7 @@
     setTheme(cur === "light" ? "dark" : "light");
   };
 
+  console.log("initData length:", tgInitData().length);
   function ensureTelegram(){
     const init = tgInitData();
     if (!init) {
