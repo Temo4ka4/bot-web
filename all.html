@@ -15,21 +15,24 @@
   <pre id="out">loading...</pre>
 
   <script>
-    const tg = window.Telegram?.WebApp || null;
-alert("tg=" + (!!tg) + " initDataLen=" + (tg?.initData?.length || 0));
+  const tg = window.Telegram?.WebApp || null;
+  const initDataLen = tg?.initData?.length || 0;
 
-    const info = {
-      hasTelegramWebApp: !!tg,
-      initDataLen: tg?.initData?.length || 0,
-      initDataUnsafe_user: tg?.initDataUnsafe?.user || null,
-      platform: tg?.platform || null,
-      version: tg?.version || null,
-      href: location.href
-    };
+  async function pingHealth(){
+    try{
+      const r = await fetch("https://api.temo4ka4.ru/health", { cache: "no-store" });
+      const t = await r.text();
+      return `health: HTTP ${r.status}\n${t}`;
+    }catch(e){
+      return `health: FAILED\n${String(e)}`;
+    }
+  }
 
-    document.getElementById("out").textContent = JSON.stringify(info, null, 2);
+  (async ()=>{
+    const health = await pingHealth();
+    alert(`tg=${!!tg}\ninitDataLen=${initDataLen}\n\n${health}`);
+  })();
+</script>
 
-    if (tg) { tg.ready(); tg.expand(); }
-  </script>
 </body>
 </html>
