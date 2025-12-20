@@ -31,7 +31,20 @@
     href: location.href
   };
 
-  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  const tg = window.Telegram?.WebApp || null;
+if (tg) { tg.ready(); tg.expand(); }
+
+document.getElementById("list").innerHTML = `
+  <div class="empty">
+    <b>WebApp debug</b><br/>
+    hasTelegramWebApp=${!!tg}<br/>
+    initDataLen=${(tg?.initData?.length || 0)}<br/>
+    platform=${tg?.platform || "?"}<br/>
+    version=${tg?.version || "?"}<br/>
+    href=${location.href}
+  </div>
+`;
+
 
   // Проверка API /health
   let health = null;
