@@ -22,8 +22,6 @@
   pre.style.padding = "12px";
   document.body.prepend(pre);
 
-  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-
   const info = {
     hasTelegramWebApp: !!tg,
     initDataLen: tg ? (tg.initData || "").length : 0,
@@ -32,6 +30,8 @@
     version: tg?.version || null,
     href: location.href
   };
+
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
 
   // Проверка API /health
   let health = null;
