@@ -3,56 +3,221 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>WebApp debug</title>
+  <title>Все ДЗ</title>
+
+  <!-- Telegram WebApp -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:16px}
-    pre{white-space:pre-wrap;background:#f4f4f6;padding:12px;border-radius:12px}
-    button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer;margin-right:8px}
+    :root{
+      --bg:#ffffff;
+      --card:#ffffff;
+      --text:#111;
+      --muted:#666;
+      --border:#e9e9ef;
+      --shadow:0 10px 25px rgba(0,0,0,.08);
+    }
+    [data-theme="dark"]{
+      --bg:#0f1115;
+      --card:#141824;
+      --text:#f2f3f5;
+      --muted:#a6adbb;
+      --border:#262b3a;
+      --shadow:0 10px 25px rgba(0,0,0,.35);
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .top{
+      position:sticky;
+      top:0;
+      background:linear-gradient(180deg,var(--bg),rgba(0,0,0,0));
+      backdrop-filter:blur(6px);
+      padding:14px 16px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .title{font-weight:900;font-size:18px}
+    .sp{flex:1}
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      color:var(--muted);
+      cursor:pointer;
+      user-select:none;
+    }
+    .switch{
+      width:42px;height:22px;
+      background:var(--border);
+      border-radius:999px;
+      position:relative;
+    }
+    .knob{
+      width:16px;height:16px;
+      background:var(--card);
+      border-radius:50%;
+      position:absolute;
+      top:3px;left:3px;
+      transition:.2s;
+      box-shadow:var(--shadow);
+    }
+    [data-theme="dark"] .knob{left:23px}
+
+    .wrap{padding:12px 16px;max-width:820px;margin:0 auto}
+    .meta{color:var(--muted);font-size:13px;margin-bottom:12px}
+
+    .day{margin-top:16px;font-weight:900}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      margin-top:10px;
+      box-shadow:var(--shadow);
+    }
+    .subj{font-weight:900}
+    .txt{margin-top:6px;white-space:pre-wrap;line-height:1.35}
+    .hint{margin-top:8px;font-size:12px;color:var(--muted)}
+
+    .empty{
+      padding:22px;
+      border:1px dashed var(--border);
+      border-radius:18px;
+      text-align:center;
+      color:var(--muted);
+    }
   </style>
 </head>
 <body>
-  <h3>WebApp debug</h3>
 
-  <div style="margin-bottom:12px">
-    <button id="btnReload">Обновить данные</button>
-    <button id="btnExpand">tg.expand()</button>
+<div class="top">
+  <div class="title">🗂 Все ДЗ</div>
+  <div class="sp"></div>
+  <div class="toggle" id="toggle">
+    Тема
+    <div class="switch"><div class="knob"></div></div>
   </div>
+</div>
 
-  <pre id="out">loading...</pre>
+<div class="wrap">
+  <div class="meta">Домашние задания на ближайшие 30 дней</div>
+  <div id="list"></div>
+</div>
 
-  <script>
-    const API_BASE = "https://api.temo4ka4.ru"; // если сделаешь вариант 2 — можешь оставить так же
+<script>
+const API_BASE = "https://api.temo4ka4.ru";
+const DAYS_AHEAD = 30;
 
-    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-    if (tg) { try { tg.ready(); tg.expand(); } catch(e){} }
+const tg = window.Telegram?.WebApp || null;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
 
-    async function load() {
-      const info = {
-        hasTelegramWebApp: !!tg,
-        initDataLen: tg ? (tg.initData || "").length : 0,
-        initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
-        platform: tg?.platform || null,
-        version: tg?.version || null,
-        href: location.href
-      };
+// --- ТЕМА ---
+function setTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  localStorage.setItem("theme", t);
+}
+setTheme(localStorage.getItem("theme")==="dark" ? "dark" : "light");
+document.getElementById("toggle").onclick = () => {
+  setTheme(
+    document.documentElement.getAttribute("data-theme")==="dark"
+      ? "light" : "dark"
+  );
+};
 
-      let health = null;
-      try {
-        const r = await fetch(API_BASE + "/health", { method: "GET" });
-        const text = await r.text();
-        health = { ok: r.ok, status: r.status, text };
-      } catch (e) {
-        health = { error: String(e) };
-      }
+// --- УТИЛИТЫ ---
+function esc(s){
+  return (s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;");
+}
 
-      document.getElementById("out").textContent = JSON.stringify({ info, health }, null, 2);
+function showMessage(title, text){
+  document.getElementById("list").innerHTML =
+    `<div class="empty"><b>${esc(title)}</b><br>${esc(text)}</div>`;
+}
+
+function render(days){
+  const root = document.getElementById("list");
+  root.innerHTML = "";
+
+  if (!days || !days.length){
+    root.innerHTML =
+      `<div class="empty">В ближайшие ${DAYS_AHEAD} дней ДЗ пока нет.</div>`;
+    return;
+  }
+
+  for (const d of days){
+    root.insertAdjacentHTML(
+      "beforeend",
+      `<div class="day">📅 ${esc(d.day)}</div>`
+    );
+
+    for (const it of (d.items || [])){
+      root.insertAdjacentHTML(
+        "beforeend",
+        `<div class="card">
+          <div class="subj">${esc(it.subject || "Общее")} —</div>
+          <div class="txt">${esc(it.text || "—")}</div>
+          ${it.files_count>0
+            ? `<div class="hint">📎 Есть файлы (${it.files_count})</div>`
+            : ""
+          }
+        </div>`
+      );
+    }
+  }
+}
+
+// --- ЗАГРУЗКА ---
+(async ()=>{
+  if (!tg){
+    showMessage("⚠️ Открой через Telegram",
+      "Эта страница работает только из бота.");
+    return;
+  }
+
+  const initData = tg.initData || "";
+  if (!initData){
+    showMessage("⚠️ Нет данных Telegram",
+      "Открой страницу кнопкой WebApp из бота.");
+    return;
+  }
+
+  try{
+    const r = await fetch(
+      `${API_BASE}/api/homework_range?days_ahead=${DAYS_AHEAD}`,
+      { headers: { "X-Telegram-InitData": initData } }
+    );
+
+    const data = await r.json();
+    if (data?.error === "no_class"){
+      showMessage("ℹ️ Ты не в классе",
+        "Вступи в класс в боте, чтобы смотреть ДЗ.");
+      return;
     }
 
-    document.getElementById("btnReload").onclick = load;
-    document.getElementById("btnExpand").onclick = () => { if (tg) tg.expand(); };
+    render(data.days || []);
+  }catch(e){
+    showMessage("🔌 Ошибка сервера",
+      "Не удалось загрузить домашку.");
+  }
+})();
+</script>
 
-    load();
-  </script>
 </body>
 </html>
