@@ -39,69 +39,61 @@
 
 <script>
   const API_BASE = "https://api.temo4ka4.ru";
-
-function tgInitData() {
-  return (window.Telegram && Telegram.WebApp) ? (Telegram.WebApp.initData || "") : "";
-}
-
-async function apiGet(path) {
-  const r = await fetch(API_BASE + path, {
-    headers: { "X-Telegram-InitData": tgInitData() }
-  });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-
-async function apiPost(path, body) {
-  const r = await fetch(API_BASE + path, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Telegram-InitData": tgInitData()
-    },
-    body: JSON.stringify(body)
-  });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-}
-
   const DAYS_AHEAD = 30;
-  const tg = window.Telegram?.WebApp || null;
+
+  const tg = (window.Telegram && Telegram.WebApp) ? Telegram.WebApp : null;
   if (tg) tg.ready();
+
+  function tgInitData() {
+    return (window.Telegram && Telegram.WebApp) ? (Telegram.WebApp.initData || "") : "";
+  }
+
+  function esc(s){return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
+
+  function showMessage(title, text){
+    document.getElementById("list").innerHTML =
+      `<div class="empty"><b>${esc(title)}</b><br/>${esc(text)}</div>`;
+  }
 
   function setTheme(theme){
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
   }
+
+  // По умолчанию светлая
   const savedTheme = localStorage.getItem("theme");
-  if (savedTheme === "dark") setTheme("dark");
-  else setTheme("light");
+  setTheme(savedTheme === "dark" ? "dark" : "light");
+
   document.getElementById("toggle").onclick = () => {
     const cur = document.documentElement.getAttribute("data-theme");
     setTheme(cur === "light" ? "dark" : "light");
   };
 
-  function esc(s){return (s||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");}
-  function showMessage(title, text){
-    document.getElementById("list").innerHTML = `<div class="empty"><b>${esc(title)}</b><br/>${esc(text)}</div>`;
-  }
   function ensureTelegram(){
-    if (!tg || !tg.initData) {
+    const init = tgInitData();
+    if (!init) {
       showMessage("⚠️ Открой через Telegram", "Эта страница работает при открытии из бота.");
       return false;
     }
     return true;
   }
-  async function safeFetch(path){
-    if (!ensureTelegram()) throw new Error("NO_TELEGRAM");
-    try{
-      const r = await fetch(API_BASE + path, { headers: { "X-Telegram-InitData": tg.initData } });
-      if(!r.ok) throw new Error("SERVER_ERROR");
-      return await r.json();
-    }catch(e){
-      showMessage("🔌 Сервер недоступен", "Пока backend API не подключён. Попробуй позже.");
-      throw e;
+
+  async function apiGet(path) {
+    const init = tgInitData();
+    const r = await fetch(API_BASE + path, {
+      headers: { "X-Telegram-InitData": init }
+    });
+
+    if (!r.ok) {
+      let body = "";
+      try { body = await r.text(); } catch(_){}
+      const err = new Error("HTTP_" + r.status);
+      err.status = r.status;
+      err.body = body;
+      throw err;
     }
+
+    return r.json();
   }
 
   function render(days){
@@ -115,7 +107,9 @@ async function apiPost(path, body) {
       root.insertAdjacentHTML("beforeend", `<div class="day">📅 ${esc(d.day)}</div>`);
       for(const it of d.items){
         const subj = it.subject?.trim() ? it.subject.trim() : "Общее";
-        const files = it.files_count>0 ? `<div class="hint">📎 Есть файлы (${it.files_count}). Если нужно — открой ДЗ в боте.</div>` : "";
+        const files = it.files_count>0
+          ? `<div class="hint">📎 Есть файлы (${it.files_count}). Если нужно — открой ДЗ в боте.</div>`
+          : "";
         root.insertAdjacentHTML("beforeend", `
           <div class="card">
             <div class="subj">${esc(subj)} —</div>
@@ -128,13 +122,29 @@ async function apiPost(path, body) {
   }
 
   (async ()=>{
+    if (!ensureTelegram()) return;
+
     try{
-      const data = await safeFetch(`/api/homework_range?days_ahead=${DAYS_AHEAD}`);
-      if(data?.error==="no_class"){showMessage("ℹ️ Ты не в классе","Вступи в класс в боте, чтобы смотреть ДЗ.");return;}
-      render(data.days||[]);
-    }catch(_){}
+      const data = await apiGet(`/api/homework_range?days_ahead=${DAYS_AHEAD}`);
+
+      if (data?.error === "no_class") {
+        showMessage("ℹ️ Ты не в классе", "Вступи в класс в боте, чтобы смотреть ДЗ.");
+        return;
+      }
+
+      render(data.days || []);
+    } catch(e) {
+      if (e.status === 401 || e.status === 403) {
+        showMessage("🔒 Нет доступа", "Похоже, Telegram-данные не прошли проверку. Открой страницу из бота ещё раз.");
+        return;
+      }
+      if (e.status >= 500) {
+        showMessage("🔌 Серверная ошибка", "API временно недоступен. Попробуй чуть позже.");
+        return;
+      }
+      showMessage("Ошибка загрузки", "TypeError: Failed to fetch");
+    }
   })();
 </script>
 </body>
 </html>
-
