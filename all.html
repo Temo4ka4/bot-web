@@ -8,58 +8,66 @@
   <style>
     body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:16px}
     pre{white-space:pre-wrap;background:#f4f4f6;padding:12px;border-radius:12px}
-    button{padding:10px 12px;border-radius:10px;border:0;background:#eee;cursor:pointer;margin-right:8px}
+    button{padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer;margin-right:8px}
+    .row{margin:12px 0}
   </style>
 </head>
 <body>
   <h3>WebApp debug</h3>
-  <pre id="out">loading...</pre>
-  <div style="margin-top:12px">
+  <div class="row">
     <button id="btnReload">Обновить данные</button>
     <button id="btnExpand">tg.expand()</button>
   </div>
+  <pre id="out">loading...</pre>
 
 <script>
-(async () => {
-  const out = document.getElementById("out");
+const API = "https://api.temo4ka4.ru";
+
+function safeJson(obj){
+  try { return JSON.stringify(obj, null, 2); }
+  catch(e){ return String(obj); }
+}
+
+async function check(){
   const tg = window.Telegram?.WebApp || null;
 
-  if (tg) {
-    try { tg.ready(); tg.expand(); } catch(e) {}
-  }
+  // если tg есть — попросим Telegram “инициализироваться”
+  try { tg?.ready(); } catch(e){}
+  try { tg?.expand(); } catch(e){}
 
-  async function load() {
-    const info = {
-      hasTelegramWebApp: !!tg,
-      initDataLen: tg ? (tg.initData || "").length : 0,
-      initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
-      platform: tg?.platform || null,
-      version: tg?.version || null,
-      href: location.href
+  const info = {
+    hasTelegramWebApp: !!tg,
+    initDataLen: tg ? (tg.initData || "").length : 0,
+    initDataUnsafeUser: tg?.initDataUnsafe?.user || null,
+    platform: tg?.platform || null,
+    version: tg?.version || null,
+    href: location.href
+  };
+
+  let health = null;
+  try {
+    const r = await fetch(API + "/health", { method: "GET", mode: "cors" });
+    const text = await r.text();
+    health = {
+      ok: r.ok,
+      status: r.status,
+      text: text
     };
-
-    let health;
-    try {
-      const r = await fetch("https://api.temo4ka4.ru/health", {
-        method: "GET",
-        headers: {
-          // ВАЖНО: в реальных запросах к API ты будешь слать initData вот так:
-          // "X-Telegram-InitData": tg?.initData || ""
-        }
-      });
-      health = { ok: r.ok, status: r.status, text: await r.text() };
-    } catch (e) {
-      health = { error: String(e) };
-    }
-
-    out.textContent = JSON.stringify({ info, health }, null, 2);
+  } catch (e) {
+    health = { error: String(e) };
   }
 
-  document.getElementById("btnReload").onclick = load;
-  document.getElementById("btnExpand").onclick = () => { try { tg?.expand(); } catch(e){} };
+  document.getElementById("out").textContent = safeJson({info, health});
+}
 
-  await load();
-})();
+document.getElementById("btnReload").onclick = check;
+document.getElementById("btnExpand").onclick = () => {
+  const tg = window.Telegram?.WebApp || null;
+  try { tg?.expand(); } catch(e){}
+  check();
+};
+
+check();
 </script>
 </body>
 </html>
