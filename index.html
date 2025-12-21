@@ -199,7 +199,6 @@
       text-overflow: ellipsis;
     }
 
-    /* iOS-like switch */
     .switch{
       position: relative;
       width: 52px;
@@ -660,7 +659,7 @@
             <button class="btn" id="jumpTomorrow">📆 К завтра</button>
           </div>
 
-          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон (обычно ~60 дней), чтобы не душить базу.</p>
+          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон, чтобы не душить базу.</p>
 
           <div class="hw-list" id="allList">
             <div class="skeleton">Загружаю…</div>
@@ -719,7 +718,6 @@
       root.dataset.theme = isDark ? "dark" : "light";
       document.getElementById("themeToggle").checked = isDark;
 
-      // theme-color for mobile
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.setAttribute("content", isDark ? "#0b1020" : "#ffffff");
     }
@@ -762,14 +760,34 @@
     }
 
     function escapeHtml(s){
-      return (s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+      return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+
+    function prettyDateLabel(iso){
+      try{
+        const [y,m,d] = iso.split("-").map(Number);
+        const dt = new Date(y, m-1, d);
+        const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
+        const nice = formatRu(dt);
+        return `${weekday}, ${nice}`;
+      }catch(e){
+        return iso;
+      }
+    }
+
+    // (Пункт #2) daysAhead для выбранной даты
+    function calcDaysAhead(dateStr){
+      const [y,m,d] = dateStr.split("-").map(Number);
+      const target = new Date(y, m-1, d);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return Math.floor((target - today) / 86400000);
     }
 
     // ================= TELEGRAM WEBAPP =================
     const tg = window.Telegram?.WebApp || null;
 
     function getInitData(){
-      // In Telegram WebApp it exists, otherwise empty
       return tg?.initData || "";
     }
 
@@ -781,53 +799,87 @@
       return (name || uname || ("id:" + u.id)).trim();
     }
 
-    // ================= API (homework_range) =================
-    // Поставь сюда адрес своего API (FastAPI), если он НЕ на том же домене.
-    // Если API и HTML на одном домене — можно оставить пустым.
-    const API_BASE = "api.temo4ka4.ru"; // пример: "https://yourdomain.com"
-    document.getElementById("apiBase").textContent = API_BASE ? API_BASE : "(тот же домен)";
+    function setWho(){
+      const who = document.getElementById("who");
+      if (tg){
+        who.textContent = "Пользователь: " + getUserLabel();
+        document.getElementById("initHint").style.display = "none";
+      }else{
+        who.textContent = "Открыто вне Telegram";
+      }
+    }
+    setWho();
+
+    // ================= API BASE =================
+    // (Пункт #1) правильный base (обязательно https!)
+    const API_BASE = "https://api.temo4ka4.ru";
+    document.getElementById("apiBase").textContent = API_BASE.replace("https://", "");
+
+    // (Пункт #3) безопасный fetch: сначала text(), потом JSON.parse
+    async function fetchMaybeJson(url, options){
+      const res = await fetch(url, options);
+      const text = await res.text();
+
+      let data = null;
+      if (text && text.trim().length){
+        try { data = JSON.parse(text); } catch { data = text; }
+      }
+
+      if (!res.ok){
+        const detail = (data && typeof data === "object" && (data.detail || data.error)) ? (data.detail || data.error) : null;
+        const msg = detail || (typeof data === "string" ? data.slice(0, 200) : `HTTP ${res.status}`);
+        throw new Error(msg);
+      }
+
+      return data;
+    }
 
     async function apiHealth(){
       try{
-        const r = await fetch((API_BASE || "") + "/health", { method:"GET" });
-        if (!r.ok) throw new Error("bad status " + r.status);
+        await fetchMaybeJson(API_BASE + "/health", { method:"GET", headers: { "Accept":"application/json" } });
         return true;
       }catch(e){
         return false;
       }
     }
 
-    async function apiHomeworkRange(daysAhead = 60){
+    // (Пункт #1 + #2 + #3) единственный правильный запрос за ДЗ
+    async function apiHomeworkRange(daysAhead = 30){
       const initData = getInitData();
       if (!initData) throw new Error("no_initData");
 
-      const url = (API_BASE || "") + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
-      const r = await fetch(url, {
+      const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
+
+      // Swagger показывает headers x-telegram-initdata / x-telegram-init-data
+      // Будем слать ОДИН правильный: x-telegram-initdata
+      return await fetchMaybeJson(url, {
         method: "GET",
         headers: {
-          "X-Telegram-InitData": initData
+          "Accept": "application/json",
+          "x-telegram-initdata": initData
         }
       });
-      const data = await r.json();
-      if (!r.ok) {
-        const msg = data?.detail || data?.error || ("HTTP " + r.status);
-        throw new Error(msg);
-      }
-      // ожидаем объект вида { by_day: { "YYYY-MM-DD": ["Алгебра — ...", ...] } } или похожий
-      return data;
     }
 
     function normalizeByDay(apiData){
-      // твой API может вернуть по-разному — тут максимально мягкий парсер
-      // варианты:
-      // 1) { by_day: { date: [..] } }
-      // 2) { days: { date: [..] } }
-      // 3) { date: [..] }
-      if (!apiData || typeof apiData !== "object") return {};
+      // максимально мягко:
+      // 1) { by_day: { "YYYY-MM-DD": [...] } }
+      // 2) { days: { "YYYY-MM-DD": [...] } }
+      // 3) { "YYYY-MM-DD": [...] }
+      // 4) если API вернул строку — покажем её как домашку на "сегодня"
+      if (!apiData) return {};
+
+      if (typeof apiData === "string"){
+        const now = new Date();
+        const todayISO = toISODate(now);
+        return { [todayISO]: [apiData] };
+      }
+
+      if (typeof apiData !== "object") return {};
+
       if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
       if (apiData.days && typeof apiData.days === "object") return apiData.days;
 
-      // fallback: если сверху сразу даты
       const keys = Object.keys(apiData);
       if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
 
@@ -843,9 +895,7 @@
       }
 
       const cards = items.map((line) => {
-        // line can be string or object
         const text = (typeof line === "string") ? line : (line?.text ?? JSON.stringify(line));
-        // subject parsing: "Алгебра — ..." or "Алгебра - ..."
         let title = "Домашка";
         let body = text;
         const m = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
@@ -925,20 +975,7 @@
       return total;
     }
 
-    function prettyDateLabel(iso){
-      try{
-        const [y,m,d] = iso.split("-").map(Number);
-        const dt = new Date(y, m-1, d);
-        const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
-        const nice = formatRu(dt);
-        return `${weekday}, ${nice}`;
-      }catch(e){
-        return iso;
-      }
-    }
-
     // ================= TABS + PAGES (scroll sync) =================
-    const tabsEl = document.getElementById("tabs");
     const pagesEl = document.getElementById("pages");
     const tabBtns = Array.from(document.querySelectorAll(".tab"));
 
@@ -950,13 +987,20 @@
       const w = pagesEl.clientWidth;
       pagesEl.scrollTo({ left: i * w, behavior: "smooth" });
       setActiveTab(i);
-      // keep tab visible
       const btn = tabBtns.find(b => Number(b.dataset.index) === i);
       if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
     }
 
     tabBtns.forEach(btn => {
-      btn.addEventListener("click", () => scrollToPage(Number(btn.dataset.index)));
+      btn.addEventListener("click", async () => {
+        const idx = Number(btn.dataset.index);
+        scrollToPage(idx);
+
+        // (Пункт #4) при смене вкладки — подгружаем актуальные данные
+        if (idx === 0) await loadTomorrow();
+        if (idx === 1) await loadToday();
+        if (idx === 3) await loadAll();
+      });
     });
 
     let scrollTimer = null;
@@ -969,6 +1013,22 @@
         if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
       }, 80);
     });
+
+    // ================= UI STATE (API badge) =================
+    function setApiBadge(ok, msg){
+      const badge = document.getElementById("apiBadge");
+      const state = document.getElementById("apiState");
+      if (ok){
+        badge.textContent = "OK";
+        badge.className = "badge good";
+        state.textContent = "API: работает";
+      }else{
+        badge.textContent = "OFF";
+        badge.className = "badge";
+        state.textContent = "API: недоступно";
+        if (msg) document.getElementById("apiBase").textContent = (API_BASE.replace("https://","") + " • " + msg).slice(0, 80);
+      }
+    }
 
     // ================= DATA LOADING =================
     const now = new Date();
@@ -985,71 +1045,80 @@
     pickDateEl.value = todayISO;
     sDateEl.value = todayISO;
 
-    function setApiBadge(ok){
-      const badge = document.getElementById("apiBadge");
-      const state = document.getElementById("apiState");
-      if (ok){
-        badge.textContent = "OK";
-        badge.className = "badge good";
-        state.textContent = "API: работает";
-      }else{
-        badge.textContent = "OFF";
-        badge.className = "badge";
-        state.textContent = "API: недоступно";
-      }
-    }
-
-    function setWho(){
-      const who = document.getElementById("who");
-      if (tg){
-        who.textContent = "Пользователь: " + getUserLabel();
-        document.getElementById("initHint").style.display = "none";
-      }else{
-        who.textContent = "Открыто вне Telegram";
-      }
-    }
-    setWho();
-
     let cacheByDay = null;
+    let cacheDaysAhead = null;
 
-    async function loadAll(){
-      const tomorrowList = document.getElementById("tomorrowList");
+    async function ensureCache(daysAhead){
+      if (cacheByDay && cacheDaysAhead === daysAhead) return cacheByDay;
+      const data = await apiHomeworkRange(daysAhead);
+      const byDay = normalizeByDay(data);
+      cacheByDay = byDay;
+      cacheDaysAhead = daysAhead;
+      return byDay;
+    }
+
+    function showErrorAll(msg){
+      document.getElementById("tomorrowList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
+      document.getElementById("todayList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
+      document.getElementById("allList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
+      document.getElementById("pickList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
+      document.getElementById("todayCount").textContent = "0";
+      document.getElementById("tomorrowCount").textContent = "0";
+      document.getElementById("allCount").textContent = "—";
+      document.getElementById("pickCount").textContent = "—";
+    }
+
+    async function loadToday(){
       const todayList = document.getElementById("todayList");
-      const allList = document.getElementById("allList");
-
-      tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       todayList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
-      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
-
       try{
-        const data = await apiHomeworkRange(60);
-        const byDay = normalizeByDay(data);
-        cacheByDay = byDay;
-
-        // today / tomorrow
+        // today = days_ahead 0
+        const byDay = await ensureCache(0);
         const cToday = renderCards(todayList, todayISO, byDay[todayISO] || []);
-        const cTom   = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
         document.getElementById("todayCount").textContent = String(cToday);
-        document.getElementById("tomorrowCount").textContent = String(cTom);
-
-        // all
-        const total = renderGroupedAll(allList, byDay);
-        document.getElementById("allCount").textContent = String(total);
-
-        toast("Данные обновлены");
+        setApiBadge(true);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
-        const pretty = (msg === "no_initData")
-          ? "Нет initData. Открой из Telegram-кнопки."
-          : ("Ошибка загрузки: " + msg);
-
-        tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         todayList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
-        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
-
         document.getElementById("todayCount").textContent = "0";
+        setApiBadge(false, "ошибка");
+      }
+    }
+
+    async function loadTomorrow(){
+      const tomorrowList = document.getElementById("tomorrowList");
+      tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        // tomorrow = days_ahead 1
+        const byDay = await ensureCache(1);
+        const cTom = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
+        document.getElementById("tomorrowCount").textContent = String(cTom);
+        setApiBadge(true);
+      }catch(e){
+        const msg = (e && e.message) ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("tomorrowCount").textContent = "0";
+        setApiBadge(false, "ошибка");
+      }
+    }
+
+    async function loadAll(){
+      const allList = document.getElementById("allList");
+      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        // all = диапазон (пусть 60 дней)
+        const byDay = await ensureCache(60);
+        const total = renderGroupedAll(allList, byDay);
+        document.getElementById("allCount").textContent = String(total);
+        setApiBadge(true);
+      }catch(e){
+        const msg = (e && e.message) ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("allCount").textContent = "—";
+        setApiBadge(false, "ошибка");
       }
     }
 
@@ -1057,43 +1126,30 @@
       const pickList = document.getElementById("pickList");
       pickList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
-        if (!cacheByDay){
-          const data = await apiHomeworkRange(60);
-          cacheByDay = normalizeByDay(data);
-        }
-        const items = cacheByDay[dateISO] || [];
+        const days = calcDaysAhead(dateISO);
+        const byDay = await ensureCache(Math.max(0, days)); // на прошлые даты сервер может не уметь — поэтому минимум 0
+        const items = byDay[dateISO] || [];
         const cnt = renderCards(pickList, dateISO, items);
         document.getElementById("pickCount").textContent = String(cnt);
+        setApiBadge(true);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
-        pickList.innerHTML = `<div class="skeleton">Ошибка: ${escapeHtml(msg)}</div>`;
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка: " + msg);
+        pickList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("pickCount").textContent = "—";
+        setApiBadge(false, "ошибка");
       }
     }
 
-    // Buttons
-    document.getElementById("pickLoad").addEventListener("click", () => {
-      loadPick(pickDateEl.value);
-    });
-    document.getElementById("pickToday").addEventListener("click", () => {
-      pickDateEl.value = todayISO;
-      loadPick(todayISO);
-    });
-    document.getElementById("pickTomorrow").addEventListener("click", () => {
-      pickDateEl.value = tomorrowISO;
-      loadPick(tomorrowISO);
-    });
+    // Buttons (Pick)
+    document.getElementById("pickLoad").addEventListener("click", () => loadPick(pickDateEl.value));
+    document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
+    document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
+    // Buttons (All)
     document.getElementById("reloadAll").addEventListener("click", () => loadAll());
-    document.getElementById("jumpToday").addEventListener("click", () => {
-      toast("Сегодня: " + todayISO);
-      // просто подсветим в списке — точный скролл по секции не делаю, чтобы не ломать разметку
-      scrollToPage(3);
-    });
-    document.getElementById("jumpTomorrow").addEventListener("click", () => {
-      toast("Завтра: " + tomorrowISO);
-      scrollToPage(3);
-    });
+    document.getElementById("jumpToday").addEventListener("click", () => { toast("Сегодня: " + todayISO); scrollToPage(3); });
+    document.getElementById("jumpTomorrow").addEventListener("click", () => { toast("Завтра: " + tomorrowISO); scrollToPage(3); });
 
     // Suggest: sendData to bot
     document.getElementById("sendSuggest").addEventListener("click", () => {
@@ -1112,10 +1168,7 @@
       if (tg && tg.sendData){
         tg.sendData(JSON.stringify(payload));
         toast("Отправлено в бота");
-        // можно закрыть:
-        // tg.close();
       }else{
-        // вне TG
         console.log("Suggest payload:", payload);
         toast("Открыто вне Telegram");
       }
@@ -1127,25 +1180,29 @@
       toast("Очищено");
     });
 
-    // Init: api check + load data
+    // Init
     (async () => {
-      const ok = await apiHealth();
-      setApiBadge(ok);
-
-      // Пробуем подтянуть ДЗ (если initData есть)
-      await loadAll();
-
-      // сразу подгрузим выбранную дату (сегодня) в "Выбрать дату"
-      await loadPick(todayISO);
-
-      // tg UI hints
+      // Telegram UI
       if (tg){
         try{
           tg.ready();
-          // можно чуть расширить на мобилке
           tg.expand();
         }catch(e){}
       }
+
+      // Health
+      const ok = await apiHealth();
+      setApiBadge(ok);
+
+      // Старт: завтра (как у тебя активна вкладка 0)
+      await loadTomorrow();
+
+      // И чтобы "Сегодня" не было пустым — подгрузим лениво
+      // (но без лишней нагрузки можно оставить только при переключении)
+      await loadToday();
+
+      // В "Выбрать дату" — покажем сегодня
+      await loadPick(todayISO);
     })();
   </script>
 </body>
