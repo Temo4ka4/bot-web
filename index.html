@@ -514,24 +514,6 @@
 </head>
 
 <body>
-  <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const hasTG = !!(window.Telegram && Telegram.WebApp);
-    const initData = hasTG ? (Telegram.WebApp.initData || "") : "";
-    const hasUser = hasTG ? !!(Telegram.WebApp.initDataUnsafe && Telegram.WebApp.initDataUnsafe.user) : false;
-
-    alert(
-      "hasTG: " + hasTG +
-      "\ninitData.length: " + initData.length +
-      "\nhasUser: " + hasUser
-    );
-
-    if (hasTG) {
-      try { Telegram.WebApp.ready(); } catch(e){}
-      try { Telegram.WebApp.expand(); } catch(e){}
-    }
-  });
-</script>
 
   <div class="app">
     <!-- LEFT -->
