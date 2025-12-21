@@ -910,23 +910,37 @@
     }
 
     function normalizeByDay(apiData){
-      if (!apiData) return {};
+  if (!apiData) return {};
 
-      if (typeof apiData === "string"){
-        const now = new Date();
-        const todayISO = toISODate(now);
-        return { [todayISO]: [apiData] };
-      }
+  // API может вернуть строку (на всякий)
+  if (typeof apiData === "string"){
+    const now = new Date();
+    const todayISO = toISODate(now);
+    return { [todayISO]: [apiData] };
+  }
 
-      if (typeof apiData !== "object") return {};
-      if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
-      if (apiData.days && typeof apiData.days === "object") return apiData.days;
+  if (typeof apiData !== "object") return {};
 
-      const keys = Object.keys(apiData);
-      if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
+  // ✅ Вариант 1: сервер вернул by_day как объект
+  if (apiData.by_day && typeof apiData.by_day === "object" && !Array.isArray(apiData.by_day)) {
+    return apiData.by_day;
+  }
 
-      return {};
+  // ✅ Вариант 2: сервер вернул days как массив [{day, items}]
+  if (Array.isArray(apiData.days)) {
+    const by = {};
+    for (const d of apiData.days) {
+      if (d && d.day) by[d.day] = Array.isArray(d.items) ? d.items : [];
     }
+    return by;
+  }
+
+  // ✅ Вариант 3: сервер вернул уже объект с ключами-датами
+  const keys = Object.keys(apiData);
+  if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
+
+  return {};
+}
 
     // ===== Subject emoji like your “usual buttons” =====
     const SUBJECT_EMOJI = [
