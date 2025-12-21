@@ -894,15 +894,24 @@
         return 0;
       }
 
-      const cards = items.map((line) => {
-        const text = (typeof line === "string") ? line : (line?.text ?? JSON.stringify(line));
-        let title = "Домашка";
-        let body = text;
-        const m = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
-        if (m){
-          title = m[1].trim();
-          body = m[2].trim();
-        }
+      const obj = (typeof line === "object" && line) ? line : null;
+const text = (typeof line === "string") ? line : (obj?.text ?? "");
+
+// 1) если API прислал subject — берём его
+let title = (obj?.subject || "").trim();
+
+// 2) иначе пытаемся вытащить из "Предмет — текст"
+let body = text;
+if (!title) {
+  const mm = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
+  if (mm) {
+    title = mm[1].trim();
+    body = mm[2].trim();
+  }
+}
+
+if (!title) title = "Домашка";
+
         return `
           <article class="hw-card">
             <div class="hw-top">
@@ -936,10 +945,17 @@
 
         const inner = (Array.isArray(items) && items.length)
           ? items.map((line) => {
-              const text = (typeof line === "string") ? line : (line?.text ?? JSON.stringify(line));
-              const m = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
-              const title = m ? m[1].trim() : "Домашка";
-              const body  = m ? m[2].trim() : text;
+             const text = (typeof line === "string")
+  ? line
+  : (line?.text ?? "");
+
+const subject = (typeof line === "object" && line?.subject)
+  ? line.subject
+  : "";
+
+let title = subject || "Домашка";
+let body = text;
+
               return `
                 <article class="hw-card" style="margin-top:10px;">
                   <div class="hw-top">
