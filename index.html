@@ -395,6 +395,10 @@
       font-size: 14px;
       letter-spacing: -0.2px;
       line-height: 1.25;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
     }
     .hw-date{
       margin: 2px 0 0 0;
@@ -419,6 +423,9 @@
       color: var(--muted);
       user-select: none;
       white-space: nowrap;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .badge.good{ color: var(--good); border-color: rgba(52,199,89,.35); background: rgba(52,199,89,.10); }
     .badge.warn{ color: var(--warn); border-color: rgba(255,149,0,.35); background: rgba(255,149,0,.10); }
@@ -499,6 +506,7 @@
       transition: .18s ease;
       max-width: calc(100vw - 26px);
       text-align: center;
+      z-index: 50;
     }
     html[data-theme="dark"] .toast{ background: rgba(255,255,255,.12); color: rgba(255,255,255,.92); border: 1px solid rgba(255,255,255,.12); }
     .toast.show{ opacity: 1; }
@@ -509,10 +517,79 @@
       line-height: 1.45;
       margin: 10px 0 0;
     }
+
+    /* ===== Splash loader (3 seconds) ===== */
+    .splash{
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(900px 450px at 15% 10%, rgba(0,122,255,.18), transparent 55%),
+        radial-gradient(700px 380px at 85% 20%, rgba(90,200,250,.22), transparent 55%),
+        radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
+        var(--bg);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .splash.hide{
+      opacity: 0;
+      transform: scale(1.01);
+      pointer-events: none;
+    }
+    .splash-card{
+      width: min(360px, calc(100vw - 36px));
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      text-align: center;
+    }
+    .spinner{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 3px solid rgba(0,0,0,.10);
+      border-top-color: rgba(0,122,255,.85);
+      animation: spin .85s linear infinite;
+    }
+    html[data-theme="dark"] .spinner{
+      border-color: rgba(255,255,255,.14);
+      border-top-color: rgba(90,200,250,.95);
+    }
+    @keyframes spin{
+      to { transform: rotate(360deg); }
+    }
+    .splash-title{
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+    .splash-sub{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+    }
   </style>
 </head>
 
 <body>
+
+  <!-- Splash (always 3 seconds) -->
+  <div class="splash" id="splash">
+    <div class="splash-card">
+      <div class="logo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
+      <div class="spinner" aria-label="Загрузка"></div>
+      <div class="splash-title">Домашнее задание</div>
+      <p class="splash-sub">Загружаю данные…</p>
+    </div>
+  </div>
 
   <div class="app">
     <!-- LEFT -->
@@ -546,19 +623,6 @@
         Свайпай вкладки справа. Тема запоминается на устройстве.
         Если открыть приложение снова — будет выбранная тема.
       </p>
-
-      <div class="section-title">Состояние</div>
-
-      <div class="pill">
-        <div class="left">
-          <div class="icon">📡</div>
-          <div class="meta">
-            <p class="t" id="apiState">API: не проверено</p>
-            <p class="s" id="apiBase">—</p>
-          </div>
-        </div>
-        <span class="badge" id="apiBadge">…</span>
-      </div>
 
       <p class="hint" id="initHint">
         Если ты открыл это не из Telegram-кнопки — данные пользователя могут быть недоступны.
@@ -698,8 +762,8 @@
           </div>
 
           <p class="small">
-            Технически: я отправляю данные через <b>Telegram.WebApp.sendData()</b>.
-            На стороне бота/сервера это можно обработать как “предложение ДЗ”.
+            Отправка идёт через <b>Telegram.WebApp.sendData()</b>.
+            Чтобы тебе приходило в ЛС — добавь обработчик в боте (код ниже).
           </p>
         </section>
       </div>
@@ -775,7 +839,6 @@
       }
     }
 
-    // (Пункт #2) daysAhead для выбранной даты
     function calcDaysAhead(dateStr){
       const [y,m,d] = dateStr.split("-").map(Number);
       const target = new Date(y, m-1, d);
@@ -811,11 +874,8 @@
     setWho();
 
     // ================= API BASE =================
-    // (Пункт #1) правильный base (обязательно https!)
     const API_BASE = "https://api.temo4ka4.ru";
-    document.getElementById("apiBase").textContent = API_BASE.replace("https://", "");
 
-    // (Пункт #3) безопасный fetch: сначала text(), потом JSON.parse
     async function fetchMaybeJson(url, options){
       const res = await fetch(url, options);
       const text = await res.text();
@@ -834,24 +894,12 @@
       return data;
     }
 
-    async function apiHealth(){
-      try{
-        await fetchMaybeJson(API_BASE + "/health", { method:"GET", headers: { "Accept":"application/json" } });
-        return true;
-      }catch(e){
-        return false;
-      }
-    }
-
-    // (Пункт #1 + #2 + #3) единственный правильный запрос за ДЗ
     async function apiHomeworkRange(daysAhead = 30){
       const initData = getInitData();
       if (!initData) throw new Error("no_initData");
 
       const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
 
-      // Swagger показывает headers x-telegram-initdata / x-telegram-init-data
-      // Будем слать ОДИН правильный: x-telegram-initdata
       return await fetchMaybeJson(url, {
         method: "GET",
         headers: {
@@ -862,11 +910,6 @@
     }
 
     function normalizeByDay(apiData){
-      // максимально мягко:
-      // 1) { by_day: { "YYYY-MM-DD": [...] } }
-      // 2) { days: { "YYYY-MM-DD": [...] } }
-      // 3) { "YYYY-MM-DD": [...] }
-      // 4) если API вернул строку — покажем её как домашку на "сегодня"
       if (!apiData) return {};
 
       if (typeof apiData === "string"){
@@ -876,7 +919,6 @@
       }
 
       if (typeof apiData !== "object") return {};
-
       if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
       if (apiData.days && typeof apiData.days === "object") return apiData.days;
 
@@ -884,6 +926,53 @@
       if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
 
       return {};
+    }
+
+    // ===== Subject emoji like your “usual buttons” =====
+    const SUBJECT_EMOJI = [
+      { re: /алгебр/i, e: "📐" },
+      { re: /геометр/i, e: "📏" },
+      { re: /матем/i, e: "🧮" },
+      { re: /рус/i, e: "✍️" },
+      { re: /литер/i, e: "📚" },
+      { re: /англ/i, e: "🇬🇧" },
+      { re: /истор/i, e: "🏛️" },
+      { re: /общест/i, e: "👥" },
+      { re: /физик/i, e: "⚡" },
+      { re: /хими/i, e: "🧪" },
+      { re: /биолог/i, e: "🧬" },
+      { re: /географ/i, e: "🌍" },
+      { re: /информ/i, e: "💻" },
+      { re: /технолог/i, e: "🛠️" },
+      { re: /музык/i, e: "🎵" },
+      { re: /изо|рисован/i, e: "🎨" },
+      { re: /физкульт|спорт/i, e: "🏃" },
+    ];
+
+    function emojiForSubject(subject){
+      const s = (subject || "").trim();
+      if (!s) return "📝";
+      const hit = SUBJECT_EMOJI.find(x => x.re.test(s));
+      return hit ? hit.e : "📝";
+    }
+
+    function extractSubjectAndBody(line){
+      const obj = (typeof line === "object" && line) ? line : null;
+      const rawText = (typeof line === "string") ? line : (obj?.text ?? "");
+
+      let subject = (obj?.subject || "").trim();
+      let body = rawText;
+
+      if (!subject) {
+        const mm = rawText.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
+        if (mm) {
+          subject = (mm[1] || "").trim();
+          body = (mm[2] || "").trim();
+        }
+      }
+
+      if (!subject) subject = "Домашка";
+      return { subject, body };
     }
 
     function renderCards(listEl, dateISO, items){
@@ -894,23 +983,10 @@
         return 0;
       }
 
-      const obj = (typeof line === "object" && line) ? line : null;
-const text = (typeof line === "string") ? line : (obj?.text ?? "");
-
-// 1) если API прислал subject — берём его
-let title = (obj?.subject || "").trim();
-
-// 2) иначе пытаемся вытащить из "Предмет — текст"
-let body = text;
-if (!title) {
-  const mm = text.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
-  if (mm) {
-    title = mm[1].trim();
-    body = mm[2].trim();
-  }
-}
-
-if (!title) title = "Домашка";
+      const cards = items.map((line) => {
+        const { subject, body } = extractSubjectAndBody(line);
+        const em = emojiForSubject(subject);
+        const title = `${em} ${subject}`;
 
         return `
           <article class="hw-card">
@@ -919,7 +995,7 @@ if (!title) title = "Домашка";
                 <p class="hw-title">${escapeHtml(title)}</p>
                 <p class="hw-date">${escapeHtml(dateISO)}</p>
               </div>
-              <span class="badge">${escapeHtml(title)}</span>
+              <span class="badge">${escapeHtml(subject)}</span>
             </div>
             <p class="hw-text">${escapeHtml(body)}</p>
           </article>
@@ -945,16 +1021,9 @@ if (!title) title = "Домашка";
 
         const inner = (Array.isArray(items) && items.length)
           ? items.map((line) => {
-             const text = (typeof line === "string")
-  ? line
-  : (line?.text ?? "");
-
-const subject = (typeof line === "object" && line?.subject)
-  ? line.subject
-  : "";
-
-let title = subject || "Домашка";
-let body = text;
+              const { subject, body } = extractSubjectAndBody(line);
+              const em = emojiForSubject(subject);
+              const title = `${em} ${subject}`;
 
               return `
                 <article class="hw-card" style="margin-top:10px;">
@@ -963,7 +1032,7 @@ let body = text;
                       <p class="hw-title">${escapeHtml(title)}</p>
                       <p class="hw-date">${escapeHtml(d)}</p>
                     </div>
-                    <span class="badge">${escapeHtml(title)}</span>
+                    <span class="badge">${escapeHtml(subject)}</span>
                   </div>
                   <p class="hw-text">${escapeHtml(body)}</p>
                 </article>
@@ -1011,8 +1080,6 @@ let body = text;
       btn.addEventListener("click", async () => {
         const idx = Number(btn.dataset.index);
         scrollToPage(idx);
-
-        // (Пункт #4) при смене вкладки — подгружаем актуальные данные
         if (idx === 0) await loadTomorrow();
         if (idx === 1) await loadToday();
         if (idx === 3) await loadAll();
@@ -1029,22 +1096,6 @@ let body = text;
         if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
       }, 80);
     });
-
-    // ================= UI STATE (API badge) =================
-    function setApiBadge(ok, msg){
-      const badge = document.getElementById("apiBadge");
-      const state = document.getElementById("apiState");
-      if (ok){
-        badge.textContent = "OK";
-        badge.className = "badge good";
-        state.textContent = "API: работает";
-      }else{
-        badge.textContent = "OFF";
-        badge.className = "badge";
-        state.textContent = "API: недоступно";
-        if (msg) document.getElementById("apiBase").textContent = (API_BASE.replace("https://","") + " • " + msg).slice(0, 80);
-      }
-    }
 
     // ================= DATA LOADING =================
     const now = new Date();
@@ -1073,32 +1124,18 @@ let body = text;
       return byDay;
     }
 
-    function showErrorAll(msg){
-      document.getElementById("tomorrowList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
-      document.getElementById("todayList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
-      document.getElementById("allList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
-      document.getElementById("pickList").innerHTML = `<div class="skeleton">${escapeHtml(msg)}</div>`;
-      document.getElementById("todayCount").textContent = "0";
-      document.getElementById("tomorrowCount").textContent = "0";
-      document.getElementById("allCount").textContent = "—";
-      document.getElementById("pickCount").textContent = "—";
-    }
-
     async function loadToday(){
       const todayList = document.getElementById("todayList");
       todayList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
-        // today = days_ahead 0
         const byDay = await ensureCache(0);
         const cToday = renderCards(todayList, todayISO, byDay[todayISO] || []);
         document.getElementById("todayCount").textContent = String(cToday);
-        setApiBadge(true);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         todayList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("todayCount").textContent = "0";
-        setApiBadge(false, "ошибка");
       }
     }
 
@@ -1106,17 +1143,14 @@ let body = text;
       const tomorrowList = document.getElementById("tomorrowList");
       tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
-        // tomorrow = days_ahead 1
         const byDay = await ensureCache(1);
         const cTom = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
         document.getElementById("tomorrowCount").textContent = String(cTom);
-        setApiBadge(true);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("tomorrowCount").textContent = "0";
-        setApiBadge(false, "ошибка");
       }
     }
 
@@ -1124,17 +1158,14 @@ let body = text;
       const allList = document.getElementById("allList");
       allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
-        // all = диапазон (пусть 60 дней)
         const byDay = await ensureCache(60);
         const total = renderGroupedAll(allList, byDay);
         document.getElementById("allCount").textContent = String(total);
-        setApiBadge(true);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("allCount").textContent = "—";
-        setApiBadge(false, "ошибка");
       }
     }
 
@@ -1143,17 +1174,15 @@ let body = text;
       pickList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
         const days = calcDaysAhead(dateISO);
-        const byDay = await ensureCache(Math.max(0, days)); // на прошлые даты сервер может не уметь — поэтому минимум 0
+        const byDay = await ensureCache(Math.max(0, days));
         const items = byDay[dateISO] || [];
         const cnt = renderCards(pickList, dateISO, items);
         document.getElementById("pickCount").textContent = String(cnt);
-        setApiBadge(true);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка: " + msg);
         pickList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("pickCount").textContent = "—";
-        setApiBadge(false, "ошибка");
       }
     }
 
@@ -1167,7 +1196,7 @@ let body = text;
     document.getElementById("jumpToday").addEventListener("click", () => { toast("Сегодня: " + todayISO); scrollToPage(3); });
     document.getElementById("jumpTomorrow").addEventListener("click", () => { toast("Завтра: " + tomorrowISO); scrollToPage(3); });
 
-    // Suggest: sendData to bot
+    // Suggest: sendData to bot (бот должен обработать web_app_data)
     document.getElementById("sendSuggest").addEventListener("click", () => {
       const payload = {
         action: "suggest_hw",
@@ -1196,9 +1225,16 @@ let body = text;
       toast("Очищено");
     });
 
+    // ===== Splash: always 3 seconds minimum =====
+    function hideSplash(){
+      const splash = document.getElementById("splash");
+      if (!splash) return;
+      splash.classList.add("hide");
+      setTimeout(() => splash.remove(), 350);
+    }
+
     // Init
     (async () => {
-      // Telegram UI
       if (tg){
         try{
           tg.ready();
@@ -1206,19 +1242,17 @@ let body = text;
         }catch(e){}
       }
 
-      // Health
-      const ok = await apiHealth();
-      setApiBadge(ok);
+      const t0 = Date.now();
+      const MIN_MS = 3000;
 
-      // Старт: завтра (как у тебя активна вкладка 0)
+      // Старт: завтра (вкладка 0 активна)
       await loadTomorrow();
-
-      // И чтобы "Сегодня" не было пустым — подгрузим лениво
-      // (но без лишней нагрузки можно оставить только при переключении)
       await loadToday();
-
-      // В "Выбрать дату" — покажем сегодня
       await loadPick(todayISO);
+
+      const spent = Date.now() - t0;
+      const left = Math.max(0, MIN_MS - spent);
+      setTimeout(hideSplash, left);
     })();
   </script>
 </body>
