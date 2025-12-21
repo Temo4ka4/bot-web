@@ -199,7 +199,6 @@
       text-overflow: ellipsis;
     }
 
-    /* iOS-like switch */
     .switch{
       position: relative;
       width: 52px;
@@ -396,6 +395,10 @@
       font-size: 14px;
       letter-spacing: -0.2px;
       line-height: 1.25;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
     }
     .hw-date{
       margin: 2px 0 0 0;
@@ -420,10 +423,11 @@
       color: var(--muted);
       user-select: none;
       white-space: nowrap;
-      max-width: 52%;
+      max-width: 180px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .badge.good{ color: var(--good); border-color: rgba(52,199,89,.35); background: rgba(52,199,89,.10); }
     .badge.warn{ color: var(--warn); border-color: rgba(255,149,0,.35); background: rgba(255,149,0,.10); }
 
     .row{
@@ -504,11 +508,7 @@
       text-align: center;
       z-index: 50;
     }
-    html[data-theme="dark"] .toast{
-      background: rgba(255,255,255,.12);
-      color: rgba(255,255,255,.92);
-      border: 1px solid rgba(255,255,255,.12);
-    }
+    html[data-theme="dark"] .toast{ background: rgba(255,255,255,.12); color: rgba(255,255,255,.92); border: 1px solid rgba(255,255,255,.12); }
     .toast.show{ opacity: 1; }
 
     .small{
@@ -518,8 +518,8 @@
       margin: 10px 0 0;
     }
 
-    /* ===== Splash loader (3 sec) ===== */
-    #splash{
+    /* ===== Splash loader (3 seconds) ===== */
+    .splash{
       position: fixed;
       inset: 0;
       z-index: 100;
@@ -530,43 +530,64 @@
         radial-gradient(700px 380px at 85% 20%, rgba(90,200,250,.22), transparent 55%),
         radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
         var(--bg);
-      transition: opacity .25s ease, visibility .25s ease;
+      transition: opacity .25s ease, transform .25s ease;
     }
-    #splash.hide{
+    .splash.hide{
       opacity: 0;
-      visibility: hidden;
+      transform: scale(1.01);
+      pointer-events: none;
+    }
+    .splash-card{
+      width: min(360px, calc(100vw - 36px));
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      text-align: center;
     }
     .spinner{
-      width: 46px;
-      height: 46px;
+      width: 44px;
+      height: 44px;
       border-radius: 999px;
-      border: 4px solid rgba(255,255,255,.45);
-      border-top-color: rgba(0,122,255,.95);
-      border-left-color: rgba(90,200,250,.85);
-      animation: spin 0.9s linear infinite;
-      box-shadow: 0 16px 40px rgba(0,0,0,.10);
-      background: rgba(255,255,255,.20);
+      border: 3px solid rgba(0,0,0,.10);
+      border-top-color: rgba(0,122,255,.85);
+      animation: spin .85s linear infinite;
+    }
+    html[data-theme="dark"] .spinner{
+      border-color: rgba(255,255,255,.14);
+      border-top-color: rgba(90,200,250,.95);
     }
     @keyframes spin{
       to { transform: rotate(360deg); }
     }
-    .splashText{
-      margin-top: 12px;
+    .splash-title{
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+    .splash-sub{
       font-size: 12px;
       color: var(--muted);
-      text-align: center;
-      max-width: 240px;
-      line-height: 1.4;
+      line-height: 1.45;
+      margin: 0;
     }
   </style>
 </head>
 
 <body>
-  <!-- Splash -->
-  <div id="splash">
-    <div style="display:flex; flex-direction:column; align-items:center;">
-      <div class="spinner"></div>
-      <div class="splashText">Загружаю домашку…</div>
+
+  <!-- Splash (always 3 seconds) -->
+  <div class="splash" id="splash">
+    <div class="splash-card">
+      <div class="logo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
+      <div class="spinner" aria-label="Загрузка"></div>
+      <div class="splash-title">Домашнее задание</div>
+      <p class="splash-sub">Загружаю данные…</p>
     </div>
   </div>
 
@@ -597,6 +618,11 @@
           <span class="knob"></span>
         </div>
       </div>
+
+      <p class="hint">
+        Свайпай вкладки справа. Тема запоминается на устройстве.
+        Если открыть приложение снова — будет выбранная тема.
+      </p>
 
       <p class="hint" id="initHint">
         Если ты открыл это не из Telegram-кнопки — данные пользователя могут быть недоступны.
@@ -697,7 +723,7 @@
             <button class="btn" id="jumpTomorrow">📆 К завтра</button>
           </div>
 
-          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон (обычно ~60 дней), чтобы не душить базу.</p>
+          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон, чтобы не душить базу.</p>
 
           <div class="hw-list" id="allList">
             <div class="skeleton">Загружаю…</div>
@@ -711,7 +737,7 @@
               <h3>Предложить ДЗ</h3>
               <p class="note">Отправим в бота предложением</p>
             </div>
-            <span class="badge">✨</span>
+            <span class="badge good">✨</span>
           </div>
 
           <div class="row">
@@ -721,13 +747,13 @@
             </div>
             <div class="field">
               <label for="sSubject">Предмет</label>
-              <input id="sSubject" type="text" placeholder="Например: 📘 Алгебра" />
+              <input id="sSubject" type="text" placeholder="Например: Алгебра" />
             </div>
           </div>
 
           <div class="field" style="margin-top: 10px;">
             <label for="sText">Текст ДЗ</label>
-            <textarea id="sText" placeholder="Например: стр 145-147, №631…"></textarea>
+            <textarea id="sText" placeholder="Например: №123 (1-5), подготовить правило…"></textarea>
           </div>
 
           <div class="btns">
@@ -736,8 +762,8 @@
           </div>
 
           <p class="small">
-            Отправляется через <b>Telegram.WebApp.sendData()</b>.
-            Бот должен обработать <b>web_app_data</b>.
+            Отправка идёт через <b>Telegram.WebApp.sendData()</b>.
+            Чтобы тебе приходило в ЛС — добавь обработчик в боте (код ниже).
           </p>
         </section>
       </div>
@@ -747,7 +773,7 @@
   <div class="toast" id="toast">готово</div>
 
   <script>
-    // ================= THEME =================
+    // ================= THEME (default light + persistence) =================
     const THEME_KEY = "dz_webapp_theme"; // "light" | "dark"
 
     function applyTheme(theme) {
@@ -798,10 +824,27 @@
     }
 
     function escapeHtml(s){
-      return (s ?? "").toString()
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;");
+      return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+
+    function prettyDateLabel(iso){
+      try{
+        const [y,m,d] = iso.split("-").map(Number);
+        const dt = new Date(y, m-1, d);
+        const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
+        const nice = formatRu(dt);
+        return `${weekday}, ${nice}`;
+      }catch(e){
+        return iso;
+      }
+    }
+
+    function calcDaysAhead(dateStr){
+      const [y,m,d] = dateStr.split("-").map(Number);
+      const target = new Date(y, m-1, d);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return Math.floor((target - today) / 86400000);
     }
 
     // ================= TELEGRAM WEBAPP =================
@@ -830,36 +873,52 @@
     }
     setWho();
 
-    // ================= API =================
+    // ================= API BASE =================
     const API_BASE = "https://api.temo4ka4.ru";
 
-    async function apiHomeworkRange(daysAhead = 60){
+    async function fetchMaybeJson(url, options){
+      const res = await fetch(url, options);
+      const text = await res.text();
+
+      let data = null;
+      if (text && text.trim().length){
+        try { data = JSON.parse(text); } catch { data = text; }
+      }
+
+      if (!res.ok){
+        const detail = (data && typeof data === "object" && (data.detail || data.error)) ? (data.detail || data.error) : null;
+        const msg = detail || (typeof data === "string" ? data.slice(0, 200) : `HTTP ${res.status}`);
+        throw new Error(msg);
+      }
+
+      return data;
+    }
+
+    async function apiHomeworkRange(daysAhead = 30){
       const initData = getInitData();
       if (!initData) throw new Error("no_initData");
 
       const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
-      const r = await fetch(url, {
+
+      return await fetchMaybeJson(url, {
         method: "GET",
         headers: {
-          "X-Telegram-InitData": initData
+          "Accept": "application/json",
+          "x-telegram-initdata": initData
         }
       });
-
-      const text = await r.text();
-      let data = null;
-      try { data = JSON.parse(text); } catch(e) {}
-
-      if (!r.ok) {
-        const msg = data?.detail || data?.error || ("HTTP " + r.status);
-        throw new Error(msg);
-      }
-
-      if (!data || typeof data !== "object") throw new Error("bad_json");
-      return data;
     }
 
     function normalizeByDay(apiData){
-      if (!apiData || typeof apiData !== "object") return {};
+      if (!apiData) return {};
+
+      if (typeof apiData === "string"){
+        const now = new Date();
+        const todayISO = toISODate(now);
+        return { [todayISO]: [apiData] };
+      }
+
+      if (typeof apiData !== "object") return {};
       if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
       if (apiData.days && typeof apiData.days === "object") return apiData.days;
 
@@ -869,27 +928,51 @@
       return {};
     }
 
-    function prettyDateLabel(iso){
-      try{
-        const [y,m,d] = iso.split("-").map(Number);
-        const dt = new Date(y, m-1, d);
-        const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
-        const nice = formatRu(dt);
-        return `${weekday}, ${nice}`;
-      }catch(e){
-        return iso;
+    // ===== Subject emoji like your “usual buttons” =====
+    const SUBJECT_EMOJI = [
+      { re: /алгебр/i, e: "📐" },
+      { re: /геометр/i, e: "📏" },
+      { re: /матем/i, e: "🧮" },
+      { re: /рус/i, e: "✍️" },
+      { re: /литер/i, e: "📚" },
+      { re: /англ/i, e: "🇬🇧" },
+      { re: /истор/i, e: "🏛️" },
+      { re: /общест/i, e: "👥" },
+      { re: /физик/i, e: "⚡" },
+      { re: /хими/i, e: "🧪" },
+      { re: /биолог/i, e: "🧬" },
+      { re: /географ/i, e: "🌍" },
+      { re: /информ/i, e: "💻" },
+      { re: /технолог/i, e: "🛠️" },
+      { re: /музык/i, e: "🎵" },
+      { re: /изо|рисован/i, e: "🎨" },
+      { re: /физкульт|спорт/i, e: "🏃" },
+    ];
+
+    function emojiForSubject(subject){
+      const s = (subject || "").trim();
+      if (!s) return "📝";
+      const hit = SUBJECT_EMOJI.find(x => x.re.test(s));
+      return hit ? hit.e : "📝";
+    }
+
+    function extractSubjectAndBody(line){
+      const obj = (typeof line === "object" && line) ? line : null;
+      const rawText = (typeof line === "string") ? line : (obj?.text ?? "");
+
+      let subject = (obj?.subject || "").trim();
+      let body = rawText;
+
+      if (!subject) {
+        const mm = rawText.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
+        if (mm) {
+          subject = (mm[1] || "").trim();
+          body = (mm[2] || "").trim();
+        }
       }
-    }
 
-    function getLineText(line){
-      if (typeof line === "string") return line;
-      if (line && typeof line === "object") return (line.text ?? "").toString();
-      return "";
-    }
-
-    function getLineSubject(line){
-      if (line && typeof line === "object" && line.subject) return String(line.subject).trim();
-      return "";
+      if (!subject) subject = "Домашка";
+      return { subject, body };
     }
 
     function renderCards(listEl, dateISO, items){
@@ -901,23 +984,9 @@
       }
 
       const cards = items.map((line) => {
-        const subject = getLineSubject(line);
-        const text = getLineText(line);
-
-        // Заголовок: subject (как в боте: "📚 Алгебра") или fallback
-        let title = subject || "Домашка";
-
-        // Тело: текст домашки
-        let body = text;
-
-        // На случай если вдруг где-то придёт одной строкой "Алгебра — текст"
-        if (!subject) {
-          const m = text.match(/^(.{1,60}?)\s*[—-]\s*(.+)$/);
-          if (m) {
-            title = m[1].trim();
-            body = m[2].trim();
-          }
-        }
+        const { subject, body } = extractSubjectAndBody(line);
+        const em = emojiForSubject(subject);
+        const title = `${em} ${subject}`;
 
         return `
           <article class="hw-card">
@@ -926,7 +995,7 @@
                 <p class="hw-title">${escapeHtml(title)}</p>
                 <p class="hw-date">${escapeHtml(dateISO)}</p>
               </div>
-              <span class="badge">${escapeHtml(title)}</span>
+              <span class="badge">${escapeHtml(subject)}</span>
             </div>
             <p class="hw-text">${escapeHtml(body)}</p>
           </article>
@@ -946,26 +1015,15 @@
       }
 
       let total = 0;
-
       const html = dates.map((d) => {
         const items = byDay[d] || [];
         total += Array.isArray(items) ? items.length : 0;
 
         const inner = (Array.isArray(items) && items.length)
           ? items.map((line) => {
-              const subject = getLineSubject(line);
-              const text = getLineText(line);
-
-              let title = subject || "Домашка";
-              let body = text;
-
-              if (!subject) {
-                const m = text.match(/^(.{1,60}?)\s*[—-]\s*(.+)$/);
-                if (m) {
-                  title = m[1].trim();
-                  body = m[2].trim();
-                }
-              }
+              const { subject, body } = extractSubjectAndBody(line);
+              const em = emojiForSubject(subject);
+              const title = `${em} ${subject}`;
 
               return `
                 <article class="hw-card" style="margin-top:10px;">
@@ -974,7 +1032,7 @@
                       <p class="hw-title">${escapeHtml(title)}</p>
                       <p class="hw-date">${escapeHtml(d)}</p>
                     </div>
-                    <span class="badge">${escapeHtml(title)}</span>
+                    <span class="badge">${escapeHtml(subject)}</span>
                   </div>
                   <p class="hw-text">${escapeHtml(body)}</p>
                 </article>
@@ -1002,7 +1060,7 @@
       return total;
     }
 
-    // ================= TABS + PAGES =================
+    // ================= TABS + PAGES (scroll sync) =================
     const pagesEl = document.getElementById("pages");
     const tabBtns = Array.from(document.querySelectorAll(".tab"));
 
@@ -1019,7 +1077,13 @@
     }
 
     tabBtns.forEach(btn => {
-      btn.addEventListener("click", () => scrollToPage(Number(btn.dataset.index)));
+      btn.addEventListener("click", async () => {
+        const idx = Number(btn.dataset.index);
+        scrollToPage(idx);
+        if (idx === 0) await loadTomorrow();
+        if (idx === 1) await loadToday();
+        if (idx === 3) await loadAll();
+      });
     });
 
     let scrollTimer = null;
@@ -1049,42 +1113,58 @@
     sDateEl.value = todayISO;
 
     let cacheByDay = null;
+    let cacheDaysAhead = null;
 
-    async function loadAll(){
-      const tomorrowList = document.getElementById("tomorrowList");
+    async function ensureCache(daysAhead){
+      if (cacheByDay && cacheDaysAhead === daysAhead) return cacheByDay;
+      const data = await apiHomeworkRange(daysAhead);
+      const byDay = normalizeByDay(data);
+      cacheByDay = byDay;
+      cacheDaysAhead = daysAhead;
+      return byDay;
+    }
+
+    async function loadToday(){
       const todayList = document.getElementById("todayList");
-      const allList = document.getElementById("allList");
-
-      tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       todayList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
-      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
-
       try{
-        const data = await apiHomeworkRange(60);
-        const byDay = normalizeByDay(data);
-        cacheByDay = byDay;
-
+        const byDay = await ensureCache(0);
         const cToday = renderCards(todayList, todayISO, byDay[todayISO] || []);
-        const cTom   = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
         document.getElementById("todayCount").textContent = String(cToday);
-        document.getElementById("tomorrowCount").textContent = String(cTom);
-
-        const total = renderGroupedAll(allList, byDay);
-        document.getElementById("allCount").textContent = String(total);
-
-        toast("Данные обновлены");
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
-        const pretty = (msg === "no_initData")
-          ? "Нет initData. Открой из Telegram-кнопки."
-          : ("Ошибка загрузки: " + msg);
-
-        tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         todayList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
-        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
-
         document.getElementById("todayCount").textContent = "0";
+      }
+    }
+
+    async function loadTomorrow(){
+      const tomorrowList = document.getElementById("tomorrowList");
+      tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        const byDay = await ensureCache(1);
+        const cTom = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
+        document.getElementById("tomorrowCount").textContent = String(cTom);
+      }catch(e){
+        const msg = (e && e.message) ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("tomorrowCount").textContent = "0";
+      }
+    }
+
+    async function loadAll(){
+      const allList = document.getElementById("allList");
+      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        const byDay = await ensureCache(60);
+        const total = renderGroupedAll(allList, byDay);
+        document.getElementById("allCount").textContent = String(total);
+      }catch(e){
+        const msg = (e && e.message) ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("allCount").textContent = "—";
       }
     }
@@ -1093,30 +1173,30 @@
       const pickList = document.getElementById("pickList");
       pickList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
-        if (!cacheByDay){
-          const data = await apiHomeworkRange(60);
-          cacheByDay = normalizeByDay(data);
-        }
-        const items = cacheByDay[dateISO] || [];
+        const days = calcDaysAhead(dateISO);
+        const byDay = await ensureCache(Math.max(0, days));
+        const items = byDay[dateISO] || [];
         const cnt = renderCards(pickList, dateISO, items);
         document.getElementById("pickCount").textContent = String(cnt);
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
-        pickList.innerHTML = `<div class="skeleton">Ошибка: ${escapeHtml(msg)}</div>`;
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка: " + msg);
+        pickList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("pickCount").textContent = "—";
       }
     }
 
-    // Buttons
+    // Buttons (Pick)
     document.getElementById("pickLoad").addEventListener("click", () => loadPick(pickDateEl.value));
     document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
+    // Buttons (All)
     document.getElementById("reloadAll").addEventListener("click", () => loadAll());
     document.getElementById("jumpToday").addEventListener("click", () => { toast("Сегодня: " + todayISO); scrollToPage(3); });
     document.getElementById("jumpTomorrow").addEventListener("click", () => { toast("Завтра: " + tomorrowISO); scrollToPage(3); });
 
-    // Suggest: sendData to bot
+    // Suggest: sendData to bot (бот должен обработать web_app_data)
     document.getElementById("sendSuggest").addEventListener("click", () => {
       const payload = {
         action: "suggest_hw",
@@ -1145,16 +1225,16 @@
       toast("Очищено");
     });
 
-    // ===== Splash hide helper =====
+    // ===== Splash: always 3 seconds minimum =====
     function hideSplash(){
-      const s = document.getElementById("splash");
-      if (s) s.classList.add("hide");
+      const splash = document.getElementById("splash");
+      if (!splash) return;
+      splash.classList.add("hide");
+      setTimeout(() => splash.remove(), 350);
     }
 
     // Init
     (async () => {
-      const start = Date.now();
-
       if (tg){
         try{
           tg.ready();
@@ -1162,12 +1242,16 @@
         }catch(e){}
       }
 
-      await loadAll();
+      const t0 = Date.now();
+      const MIN_MS = 3000;
+
+      // Старт: завтра (вкладка 0 активна)
+      await loadTomorrow();
+      await loadToday();
       await loadPick(todayISO);
 
-      // минимум 3 секунды
-      const elapsed = Date.now() - start;
-      const left = Math.max(0, 3000 - elapsed);
+      const spent = Date.now() - t0;
+      const left = Math.max(0, MIN_MS - spent);
       setTimeout(hideSplash, left);
     })();
   </script>
