@@ -160,6 +160,9 @@
       background: rgba(255,255,255,.06);
     }
 
+    .pill.clickable{ cursor: pointer; }
+    .pill.clickable:active{ background: var(--tap); }
+
     .pill .left{
       display: flex;
       gap: 10px;
@@ -198,43 +201,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    .switch{
-      position: relative;
-      width: 52px;
-      height: 30px;
-      flex: 0 0 auto;
-    }
-    .switch input{
-      appearance: none;
-      -webkit-appearance: none;
-      width: 52px;
-      height: 30px;
-      margin: 0;
-      border-radius: 999px;
-      background: var(--chip2);
-      border: 1px solid var(--line);
-      outline: none;
-      cursor: pointer;
-      transition: .18s ease;
-    }
-    .switch input:checked{
-      background: rgba(0,122,255,.85);
-      border-color: rgba(0,122,255,.55);
-    }
-    .switch .knob{
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      background: #fff;
-      box-shadow: 0 10px 20px rgba(0,0,0,.20);
-      transition: .18s ease;
-      pointer-events: none;
-    }
-    .switch input:checked + .knob{ transform: translateX(22px); }
 
     .hint{
       margin: 12px 2px 0;
@@ -485,8 +451,8 @@
       gap: 8px;
     }
     .btn.primary{
-      border-color: rgba(0,122,255,.45);
-      background: rgba(0,122,255,.14);
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      background: color-mix(in srgb, var(--accent) 16%, transparent);
       color: var(--text);
     }
     .btn:active{ transform: translateY(1px); }
@@ -518,7 +484,7 @@
       margin: 10px 0 0;
     }
 
-    /* ===== Splash loader (3 seconds) ===== */
+    /* ===== Splash loader ===== */
     .splash{
       position: fixed;
       inset: 0;
@@ -538,7 +504,7 @@
       pointer-events: none;
     }
     .splash-card{
-      width: min(360px, calc(100vw - 36px));
+      width: min(380px, calc(100vw - 36px));
       border-radius: 24px;
       border: 1px solid var(--line);
       background: var(--surface);
@@ -550,22 +516,21 @@
       gap: 12px;
       justify-items: center;
       text-align: center;
+      overflow: hidden;
     }
     .spinner{
       width: 44px;
       height: 44px;
       border-radius: 999px;
       border: 3px solid rgba(0,0,0,.10);
-      border-top-color: rgba(0,122,255,.85);
+      border-top-color: color-mix(in srgb, var(--accent) 92%, #000 0%);
       animation: spin .85s linear infinite;
     }
     html[data-theme="dark"] .spinner{
       border-color: rgba(255,255,255,.14);
-      border-top-color: rgba(90,200,250,.95);
+      border-top-color: color-mix(in srgb, var(--accent-2) 95%, #fff 0%);
     }
-    @keyframes spin{
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin{ to { transform: rotate(360deg); } }
     .splash-title{
       font-weight: 800;
       letter-spacing: -0.2px;
@@ -575,19 +540,246 @@
       color: var(--muted);
       line-height: 1.45;
       margin: 0;
+      min-height: 18px;
+    }
+    .splash-tip{
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+      padding-top: 2px;
+    }
+    .bar{
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.08);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    html[data-theme="dark"] .bar{ background: rgba(255,255,255,.10); }
+    .bar > i{
+      display: block;
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 80%, transparent), transparent);
+      animation: indet 1.1s ease-in-out infinite;
+      transform: translateX(-60%);
+    }
+    @keyframes indet{
+      0%{ transform: translateX(-60%); }
+      100%{ transform: translateX(220%); }
+    }
+
+    /* ===== Overlay / Modal ===== */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      display: none;
+      place-items: center;
+      padding: 16px;
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    html[data-theme="dark"] .overlay{ background: rgba(0,0,0,.35); }
+    .overlay.show{ display: grid; }
+
+    .modal{
+      width: min(520px, calc(100vw - 32px));
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .modal-head{
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+    .modal-head h3{
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: -.2px;
+    }
+    .modal-body{
+      padding: 14px 16px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .opt-grid{
+      display: grid;
+      gap: 10px;
+    }
+    .opt{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+    }
+    .opt .left{
+      display: grid;
+      gap: 2px;
+    }
+    .opt .t{ font-size: 13px; margin: 0; }
+    .opt .s{ font-size: 12px; color: var(--muted); margin: 0; }
+
+    .seg{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .seg button{
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 8px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .seg button[data-on="true"]{
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      background: color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+    .seg button:active{ transform: translateY(1px); }
+
+    .divider{
+      height: 1px;
+      background: var(--line);
+      margin: 2px 0;
+    }
+
+    .mini{
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+      margin: 0;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Splash (always 3 seconds) -->
+  <!-- Splash (min 3 seconds) -->
   <div class="splash" id="splash">
     <div class="splash-card">
-      <div class="logo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
+      <div class="logo" id="splashLogo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
       <div class="spinner" aria-label="Загрузка"></div>
-      <div class="splash-title">Домашнее задание</div>
-      <p class="splash-sub">Загружаю данные…</p>
+      <div class="splash-title" id="splashTitle">Домашнее задание</div>
+      <p class="splash-sub" id="splashSub">Загружаем домашку…</p>
+      <div class="bar" aria-hidden="true"><i></i></div>
+      <p class="splash-tip" id="splashTip">Совет: свайпай вкладки вправо/влево.</p>
+    </div>
+  </div>
+
+  <!-- Settings overlay -->
+  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true">
+    <div class="modal" id="settingsModal">
+      <div class="modal-head">
+        <h3 id="settingsHeadTitle">Настройки</h3>
+        <button class="btn" id="settingsClose">✖ Закрыть</button>
+      </div>
+
+      <!-- Loader inside settings -->
+      <div class="modal-body" id="settingsLoader" style="display:none; place-items:center; text-align:center;">
+        <div class="logo" style="width:54px;height:54px;border-radius:18px;" id="settingsLoaderLogo">DZ</div>
+        <div class="spinner" aria-label="Загрузка настроек"></div>
+        <div style="font-weight:800; letter-spacing:-.2px;">Загрузка настроек</div>
+        <p class="splash-sub" id="settingsLoaderSub" style="margin:0;">Подготавливаем интерфейс…</p>
+        <div class="bar"><i></i></div>
+        <p class="mini" style="margin:0;">Это занимает пару секунд.</p>
+      </div>
+
+      <!-- Real settings content -->
+      <div class="modal-body" id="settingsBody" style="display:none;">
+        <div class="opt">
+          <div class="left">
+            <p class="t">🎨 Цветовая тема</p>
+            <p class="s">Стандартная / Фиолетовая / Мятная</p>
+          </div>
+          <div class="seg" id="presetSeg">
+            <button type="button" data-preset="standard">Стандарт</button>
+            <button type="button" data-preset="purple">Фиолет</button>
+            <button type="button" data-preset="mint">Мята</button>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="left">
+            <p class="t">🌗 Режим</p>
+            <p class="s">Светлый / Тёмный</p>
+          </div>
+          <div class="seg" id="modeSeg">
+            <button type="button" data-mode="light">Светлый</button>
+            <button type="button" data-mode="dark">Тёмный</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="opt">
+          <div class="left">
+            <p class="t">🧷 Логотип в шапке</p>
+            <p class="s">DZ / Книга / Тетрадь / Школа / Сова</p>
+          </div>
+          <div class="seg" id="logoSeg">
+            <button type="button" data-logo="dz">DZ</button>
+            <button type="button" data-logo="book">📘</button>
+            <button type="button" data-logo="notebook">📓</button>
+            <button type="button" data-logo="school">🏫</button>
+            <button type="button" data-logo="owl">🦉</button>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="left">
+            <p class="t">🙂 Эмодзи предметов</p>
+            <p class="s">Показывать/скрывать эмодзи перед названием</p>
+          </div>
+          <div class="seg" id="emojiSeg">
+            <button type="button" data-emoji="on">Показывать</button>
+            <button type="button" data-emoji="off">Скрыть</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="opt">
+          <div class="left">
+            <p class="t">🔄 Автообновление</p>
+            <p class="s">Обновлять данные автоматически при открытии</p>
+          </div>
+          <div class="seg" id="autorefreshSeg">
+            <button type="button" data-auto="on">Вкл</button>
+            <button type="button" data-auto="off">Выкл</button>
+          </div>
+        </div>
+
+        <div class="opt">
+          <div class="left">
+            <p class="t">🧹 Очистить кэш</p>
+            <p class="s">Если что-то сломалось или данные не те</p>
+          </div>
+          <div class="seg">
+            <button type="button" id="clearCacheBtn">Очистить</button>
+          </div>
+        </div>
+
+        <p class="mini">Настройки сохраняются на устройстве (localStorage).</p>
+      </div>
     </div>
   </div>
 
@@ -595,7 +787,7 @@
     <!-- LEFT -->
     <aside class="card sidebar">
       <div class="brand">
-        <div class="logo">DZ</div>
+        <div class="logo" id="brandLogo">DZ</div>
         <div>
           <h1>Домашнее Задание • WebApp</h1>
           <p id="who">подключение…</p>
@@ -604,24 +796,20 @@
 
       <div class="section-title">Разделы</div>
 
-      <div class="pill">
+      <!-- settings button -->
+      <div class="pill clickable" id="openSettings">
         <div class="left">
-          <div class="icon">🎨</div>
+          <div class="icon">⚙️</div>
           <div class="meta">
-            <p class="t">Тема</p>
-            <p class="s">Светлая / Тёмная</p>
+            <p class="t">Настройки</p>
+            <p class="s" id="settingsSubline">Тема • логотип • обновление</p>
           </div>
         </div>
-
-        <div class="switch" title="Переключить тему">
-          <input id="themeToggle" type="checkbox" aria-label="Тёмная тема">
-          <span class="knob"></span>
-        </div>
+        <span class="badge">Открыть</span>
       </div>
 
       <p class="hint">
-        Свайпай вкладки справа. Тема запоминается на устройстве.
-        Если открыть приложение снова — будет выбранная тема.
+        Свайпай вкладки справа. Настройки сохраняются на устройстве.
       </p>
 
       <p class="hint" id="initHint">
@@ -640,31 +828,18 @@
         <span class="chip" id="todayChip">📅 —</span>
       </div>
 
+      <!-- Tabs order: today, tomorrow, all, date, suggest -->
       <div class="tabs" id="tabs">
-        <button class="tab" data-index="0" data-active="true">📆 На завтра</button>
-        <button class="tab" data-index="1">📅 На сегодня</button>
-        <button class="tab" data-index="2">🔎 Выбрать дату</button>
-        <button class="tab" data-index="3">🗂 Показать всё ДЗ</button>
+        <button class="tab" data-index="0" data-active="true">📅 На сегодня</button>
+        <button class="tab" data-index="1">📆 На завтра</button>
+        <button class="tab" data-index="2">🗂 Всё ДЗ</button>
+        <button class="tab" data-index="3">🔎 ДЗ по дате</button>
         <button class="tab" data-index="4">✉️ Предложить ДЗ</button>
       </div>
 
       <div class="pages" id="pages">
-        <!-- 0: tomorrow -->
+        <!-- 0: today -->
         <section class="page" data-index="0">
-          <div class="page-head">
-            <div>
-              <h3>На завтра</h3>
-              <p class="note" id="tomorrowNote">—</p>
-            </div>
-            <span class="badge warn" id="tomorrowCount">0</span>
-          </div>
-          <div class="hw-list" id="tomorrowList">
-            <div class="skeleton">Загружаю…</div>
-          </div>
-        </section>
-
-        <!-- 1: today -->
-        <section class="page" data-index="1">
           <div class="page-head">
             <div>
               <h3>На сегодня</h3>
@@ -677,11 +852,48 @@
           </div>
         </section>
 
-        <!-- 2: pick date -->
+        <!-- 1: tomorrow -->
+        <section class="page" data-index="1">
+          <div class="page-head">
+            <div>
+              <h3>На завтра</h3>
+              <p class="note" id="tomorrowNote">—</p>
+            </div>
+            <span class="badge warn" id="tomorrowCount">0</span>
+          </div>
+          <div class="hw-list" id="tomorrowList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 2: all -->
         <section class="page" data-index="2">
           <div class="page-head">
             <div>
-              <h3>Выбрать дату</h3>
+              <h3>Показать всё ДЗ</h3>
+              <p class="note">По дням, аккуратно карточками</p>
+            </div>
+            <span class="badge" id="allCount">—</span>
+          </div>
+
+          <div class="btns">
+            <button class="btn primary" id="reloadAll">🔄 Обновить</button>
+            <button class="btn" id="jumpToday">📅 К сегодня</button>
+            <button class="btn" id="jumpTomorrow">📆 К завтра</button>
+          </div>
+
+          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон, чтобы не душить базу.</p>
+
+          <div class="hw-list" id="allList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 3: pick date -->
+        <section class="page" data-index="3">
+          <div class="page-head">
+            <div>
+              <h3>ДЗ по дате</h3>
               <p class="note">Выбирай день и смотри ДЗ</p>
             </div>
             <span class="badge" id="pickCount">—</span>
@@ -704,29 +916,6 @@
 
           <div class="hw-list" id="pickList" style="margin-top: 12px;">
             <div class="skeleton">Выбери дату и нажми “Показать”.</div>
-          </div>
-        </section>
-
-        <!-- 3: all -->
-        <section class="page" data-index="3">
-          <div class="page-head">
-            <div>
-              <h3>Показать всё ДЗ</h3>
-              <p class="note">По дням, аккуратно карточками</p>
-            </div>
-            <span class="badge" id="allCount">—</span>
-          </div>
-
-          <div class="btns">
-            <button class="btn primary" id="reloadAll">🔄 Обновить</button>
-            <button class="btn" id="jumpToday">📅 К сегодня</button>
-            <button class="btn" id="jumpTomorrow">📆 К завтра</button>
-          </div>
-
-          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон, чтобы не душить базу.</p>
-
-          <div class="hw-list" id="allList">
-            <div class="skeleton">Загружаю…</div>
           </div>
         </section>
 
@@ -762,8 +951,7 @@
           </div>
 
           <p class="small">
-            Отправка идёт через <b>Telegram.WebApp.sendData()</b>.
-            Чтобы тебе приходило в ЛС — добавь обработчик в боте (код ниже).
+            Отправка идёт через <b>Telegram.WebApp.sendData()</b>. После отправки бот должен прислать подтверждение.
           </p>
         </section>
       </div>
@@ -773,39 +961,106 @@
   <div class="toast" id="toast">готово</div>
 
   <script>
-    // ================= THEME (default light + persistence) =================
-    const THEME_KEY = "dz_webapp_theme"; // "light" | "dark"
+    // ================= SETTINGS KEYS =================
+    const THEME_MODE_KEY = "dz_webapp_mode"; // "light" | "dark"
+    const THEME_PRESET_KEY = "dz_webapp_preset"; // "standard" | "purple" | "mint"
+    const LOGO_KEY = "dz_webapp_logo"; // "dz" | "book" | "notebook" | "school" | "owl"
+    const EMOJI_KEY = "dz_webapp_emoji"; // "on" | "off"
+    const AUTOREFRESH_KEY = "dz_webapp_autorefresh"; // "on" | "off"
 
-    function applyTheme(theme) {
+    const PRESETS = {
+      standard: { accent:"#007aff", accent2:"#5ac8fa" },
+      purple:   { accent:"#7c3aed", accent2:"#a78bfa" },
+      mint:     { accent:"#10b981", accent2:"#2dd4bf" },
+    };
+
+    const LOGOS = {
+      dz: "DZ",
+      book: "📘",
+      notebook: "📓",
+      school: "🏫",
+      owl: "🦉",
+    };
+
+    function getLS(key, fallback){
+      const v = localStorage.getItem(key);
+      return (v === null || v === undefined || v === "") ? fallback : v;
+    }
+    function setLS(key, val){ localStorage.setItem(key, String(val)); }
+
+    function applyPreset(preset){
+      const p = PRESETS[preset] || PRESETS.standard;
+      document.documentElement.style.setProperty("--accent", p.accent);
+      document.documentElement.style.setProperty("--accent-2", p.accent2);
+      setLS(THEME_PRESET_KEY, preset);
+      updateSettingsSubline();
+    }
+
+    function applyMode(mode){
       const root = document.documentElement;
-      const isDark = theme === "dark";
-      root.dataset.theme = isDark ? "dark" : "light";
-      document.getElementById("themeToggle").checked = isDark;
-
+      root.dataset.theme = (mode === "dark") ? "dark" : "light";
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", isDark ? "#0b1020" : "#ffffff");
+      if (meta) meta.setAttribute("content", (mode === "dark") ? "#0b1020" : "#ffffff");
+      setLS(THEME_MODE_KEY, mode);
+      updateSettingsSubline();
     }
 
-    function loadTheme() {
-      const saved = localStorage.getItem(THEME_KEY);
-      if (saved === "dark" || saved === "light") return saved;
-      return "light";
+    function applyLogo(logo){
+      const v = LOGOS[logo] || "DZ";
+      document.getElementById("brandLogo").textContent = v;
+      document.getElementById("splashLogo").textContent = v;
+      document.getElementById("settingsLoaderLogo").textContent = v;
+      setLS(LOGO_KEY, logo);
+      updateSettingsSubline();
     }
 
-    function saveTheme(theme) {
-      localStorage.setItem(THEME_KEY, theme);
+    function isEmojiOn(){
+      return getLS(EMOJI_KEY, "on") === "on";
     }
 
-    applyTheme(loadTheme());
+    function setEmoji(on){
+      setLS(EMOJI_KEY, on ? "on" : "off");
+      // перерисуем текущие листы (если уже загружены)
+      if (cacheByDay) {
+        loadToday();
+        loadTomorrow();
+        if (allLoadedOnce) loadAll();
+      }
+      updateSettingsSubline();
+    }
 
-    document.getElementById("themeToggle").addEventListener("change", (e) => {
-      const theme = e.target.checked ? "dark" : "light";
-      applyTheme(theme);
-      saveTheme(theme);
-      toast(theme === "dark" ? "Тёмная тема включена" : "Светлая тема включена");
-    });
+    function isAutoRefreshOn(){
+      return getLS(AUTOREFRESH_KEY, "on") === "on";
+    }
+    function setAutoRefresh(on){
+      setLS(AUTOREFRESH_KEY, on ? "on" : "off");
+      updateSettingsSubline();
+    }
 
-    // ================= SMALL UTILS =================
+    function updateSettingsSubline(){
+      const preset = getLS(THEME_PRESET_KEY, "standard");
+      const mode = getLS(THEME_MODE_KEY, "light");
+      const logo = getLS(LOGO_KEY, "dz");
+      const emoji = getLS(EMOJI_KEY, "on");
+      const auto = getLS(AUTOREFRESH_KEY, "on");
+
+      const presetName = (preset==="purple") ? "фиолет" : (preset==="mint" ? "мята" : "станд");
+      const modeName = (mode==="dark") ? "тёмн" : "светл";
+      const logoName = (logo==="dz") ? "DZ" : LOGOS[logo];
+      const emojiName = (emoji==="on") ? "эмодзи" : "без эмодзи";
+      const autoName = (auto==="on") ? "автообн" : "без автообн";
+
+      document.getElementById("settingsSubline").textContent =
+        `${presetName} • ${modeName} • ${logoName} • ${emojiName} • ${autoName}`;
+    }
+
+    // init settings (apply on load)
+    applyPreset(getLS(THEME_PRESET_KEY, "standard"));
+    applyMode(getLS(THEME_MODE_KEY, "light"));
+    applyLogo(getLS(LOGO_KEY, "dz"));
+    updateSettingsSubline();
+
+    // ================= TOAST =================
     function toast(msg){
       const el = document.getElementById("toast");
       el.textContent = msg;
@@ -813,20 +1068,18 @@
       setTimeout(() => el.classList.remove("show"), 1300);
     }
 
+    // ================= DATE UTILS =================
     function pad2(n){ return String(n).padStart(2,"0"); }
     function toISODate(d){
       return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
     }
-
     function formatRu(d){
       const opts = { day:"2-digit", month:"2-digit", year:"numeric" };
       return new Intl.DateTimeFormat("ru-RU", opts).format(d);
     }
-
     function escapeHtml(s){
       return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
     }
-
     function prettyDateLabel(iso){
       try{
         const [y,m,d] = iso.split("-").map(Number);
@@ -838,7 +1091,6 @@
         return iso;
       }
     }
-
     function calcDaysAhead(dateStr){
       const [y,m,d] = dateStr.split("-").map(Number);
       const target = new Date(y, m-1, d);
@@ -850,10 +1102,7 @@
     // ================= TELEGRAM WEBAPP =================
     const tg = window.Telegram?.WebApp || null;
 
-    function getInitData(){
-      return tg?.initData || "";
-    }
-
+    function getInitData(){ return tg?.initData || ""; }
     function getUserLabel(){
       const u = tg?.initDataUnsafe?.user;
       if (!u) return "Гость";
@@ -861,7 +1110,6 @@
       const uname = u.username ? ("@" + u.username) : "";
       return (name || uname || ("id:" + u.id)).trim();
     }
-
     function setWho(){
       const who = document.getElementById("who");
       if (tg){
@@ -873,7 +1121,7 @@
     }
     setWho();
 
-    // ================= API BASE =================
+    // ================= API =================
     const API_BASE = "https://api.temo4ka4.ru";
 
     async function fetchMaybeJson(url, options){
@@ -910,39 +1158,30 @@
     }
 
     function normalizeByDay(apiData){
-  if (!apiData) return {};
+      if (!apiData) return {};
+      if (typeof apiData === "string"){
+        const now = new Date();
+        const todayISO = toISODate(now);
+        return { [todayISO]: [apiData] };
+      }
+      if (typeof apiData !== "object") return {};
 
-  // API может вернуть строку (на всякий)
-  if (typeof apiData === "string"){
-    const now = new Date();
-    const todayISO = toISODate(now);
-    return { [todayISO]: [apiData] };
-  }
-
-  if (typeof apiData !== "object") return {};
-
-  // ✅ Вариант 1: сервер вернул by_day как объект
-  if (apiData.by_day && typeof apiData.by_day === "object" && !Array.isArray(apiData.by_day)) {
-    return apiData.by_day;
-  }
-
-  // ✅ Вариант 2: сервер вернул days как массив [{day, items}]
-  if (Array.isArray(apiData.days)) {
-    const by = {};
-    for (const d of apiData.days) {
-      if (d && d.day) by[d.day] = Array.isArray(d.items) ? d.items : [];
+      if (apiData.by_day && typeof apiData.by_day === "object" && !Array.isArray(apiData.by_day)) {
+        return apiData.by_day;
+      }
+      if (Array.isArray(apiData.days)) {
+        const by = {};
+        for (const d of apiData.days) {
+          if (d && d.day) by[d.day] = Array.isArray(d.items) ? d.items : [];
+        }
+        return by;
+      }
+      const keys = Object.keys(apiData);
+      if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
+      return {};
     }
-    return by;
-  }
 
-  // ✅ Вариант 3: сервер вернул уже объект с ключами-датами
-  const keys = Object.keys(apiData);
-  if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
-
-  return {};
-}
-
-    // ===== Subject emoji like your “usual buttons” =====
+    // ===== Subject emoji mapping =====
     const SUBJECT_EMOJI = [
       { re: /алгебр/i, e: "📐" },
       { re: /геометр/i, e: "📏" },
@@ -997,10 +1236,12 @@
         return 0;
       }
 
+      const showEmoji = isEmojiOn();
+
       const cards = items.map((line) => {
         const { subject, body } = extractSubjectAndBody(line);
         const em = emojiForSubject(subject);
-        const title = `${em} ${subject}`;
+        const title = showEmoji ? `${em} ${subject}` : `${subject}`;
 
         return `
           <article class="hw-card">
@@ -1028,6 +1269,8 @@
         return 0;
       }
 
+      const showEmoji = isEmojiOn();
+
       let total = 0;
       const html = dates.map((d) => {
         const items = byDay[d] || [];
@@ -1037,7 +1280,7 @@
           ? items.map((line) => {
               const { subject, body } = extractSubjectAndBody(line);
               const em = emojiForSubject(subject);
-              const title = `${em} ${subject}`;
+              const title = showEmoji ? `${em} ${subject}` : `${subject}`;
 
               return `
                 <article class="hw-card" style="margin-top:10px;">
@@ -1055,7 +1298,7 @@
           : `<div class="skeleton">На этот день записей нет.</div>`;
 
         return `
-          <section style="margin-top:12px;">
+          <section id="day-${escapeHtml(d)}" style="margin-top:12px;">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
               <div style="display:flex;flex-direction:column;">
                 <div style="font-weight:700; font-size:14px; letter-spacing:-.2px;">${escapeHtml(d)}</div>
@@ -1074,7 +1317,7 @@
       return total;
     }
 
-    // ================= TABS + PAGES (scroll sync) =================
+    // ================= TABS + PAGES =================
     const pagesEl = document.getElementById("pages");
     const tabBtns = Array.from(document.querySelectorAll(".tab"));
 
@@ -1094,9 +1337,9 @@
       btn.addEventListener("click", async () => {
         const idx = Number(btn.dataset.index);
         scrollToPage(idx);
-        if (idx === 0) await loadTomorrow();
-        if (idx === 1) await loadToday();
-        if (idx === 3) await loadAll();
+        if (idx === 0) await loadToday();
+        if (idx === 1) await loadTomorrow();
+        if (idx === 2) await loadAll();
       });
     });
 
@@ -1128,6 +1371,7 @@
 
     let cacheByDay = null;
     let cacheDaysAhead = null;
+    let allLoadedOnce = false;
 
     async function ensureCache(daysAhead){
       if (cacheByDay && cacheDaysAhead === daysAhead) return cacheByDay;
@@ -1175,6 +1419,7 @@
         const byDay = await ensureCache(60);
         const total = renderGroupedAll(allList, byDay);
         document.getElementById("allCount").textContent = String(total);
+        allLoadedOnce = true;
       }catch(e){
         const msg = (e && e.message) ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
@@ -1205,12 +1450,27 @@
     document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
-    // Buttons (All)
-    document.getElementById("reloadAll").addEventListener("click", () => loadAll());
-    document.getElementById("jumpToday").addEventListener("click", () => { toast("Сегодня: " + todayISO); scrollToPage(3); });
-    document.getElementById("jumpTomorrow").addEventListener("click", () => { toast("Завтра: " + tomorrowISO); scrollToPage(3); });
+    // Buttons (All) FIXED: реально скроллим к секции
+    document.getElementById("reloadAll").addEventListener("click", async () => {
+      await loadAll();
+      toast("Обновлено");
+    });
 
-    // Suggest: sendData to bot (бот должен обработать web_app_data)
+    async function scrollAllToDay(dayISO){
+      // если не загружено — загрузим
+      if (!allLoadedOnce) await loadAll();
+      scrollToPage(2);
+      setTimeout(() => {
+        const el = document.getElementById("day-" + dayISO);
+        if (el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+        else toast("На эту дату нет секции");
+      }, 250);
+    }
+
+    document.getElementById("jumpToday").addEventListener("click", () => scrollAllToDay(todayISO));
+    document.getElementById("jumpTomorrow").addEventListener("click", () => scrollAllToDay(tomorrowISO));
+
+    // Suggest: sendData to bot
     document.getElementById("sendSuggest").addEventListener("click", () => {
       const payload = {
         action: "suggest_hw",
@@ -1227,6 +1487,7 @@
       if (tg && tg.sendData){
         tg.sendData(JSON.stringify(payload));
         toast("Отправлено в бота");
+        try { tg.HapticFeedback?.notificationOccurred?.("success"); } catch(e){}
       }else{
         console.log("Suggest payload:", payload);
         toast("Открыто вне Telegram");
@@ -1239,7 +1500,119 @@
       toast("Очищено");
     });
 
-    // ===== Splash: always 3 seconds minimum =====
+    // ================= SETTINGS UI =================
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const settingsBody = document.getElementById("settingsBody");
+    const settingsLoader = document.getElementById("settingsLoader");
+
+    function markSegButtons(containerId, predicate){
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      Array.from(el.querySelectorAll("button")).forEach(b => {
+        b.dataset.on = predicate(b) ? "true" : "false";
+      });
+    }
+
+    function syncSettingsUI(){
+      const preset = getLS(THEME_PRESET_KEY, "standard");
+      const mode = getLS(THEME_MODE_KEY, "light");
+      const logo = getLS(LOGO_KEY, "dz");
+      const emoji = getLS(EMOJI_KEY, "on");
+      const auto = getLS(AUTOREFRESH_KEY, "on");
+
+      markSegButtons("presetSeg", b => b.dataset.preset === preset);
+      markSegButtons("modeSeg", b => b.dataset.mode === mode);
+      markSegButtons("logoSeg", b => b.dataset.logo === logo);
+      markSegButtons("emojiSeg", b => b.dataset.emoji === emoji);
+      markSegButtons("autorefreshSeg", b => b.dataset.auto === auto);
+    }
+
+    function openSettings(){
+      settingsOverlay.classList.add("show");
+      settingsBody.style.display = "none";
+      settingsLoader.style.display = "grid";
+      syncSettingsUI();
+
+      // 3 секунды "загрузка настроек" как ты просил
+      const phrases = ["Загрузка настроек…", "Применяем тему…", "Подготавливаем интерфейс…"];
+      let i = 0;
+      const sub = document.getElementById("settingsLoaderSub");
+      const timer = setInterval(() => {
+        sub.textContent = phrases[i % phrases.length];
+        i++;
+      }, 700);
+
+      setTimeout(() => {
+        clearInterval(timer);
+        settingsLoader.style.display = "none";
+        settingsBody.style.display = "grid";
+        syncSettingsUI();
+      }, 3000);
+    }
+
+    function closeSettings(){
+      settingsOverlay.classList.remove("show");
+    }
+
+    document.getElementById("openSettings").addEventListener("click", openSettings);
+    document.getElementById("settingsClose").addEventListener("click", closeSettings);
+    settingsOverlay.addEventListener("click", (e) => {
+      if (e.target === settingsOverlay) closeSettings();
+    });
+
+    document.getElementById("presetSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      const p = b.dataset.preset;
+      applyPreset(p);
+      syncSettingsUI();
+      toast("Тема: " + (p==="purple"?"фиолетовая":(p==="mint"?"мятная":"стандартная")));
+    });
+
+    document.getElementById("modeSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      const m = b.dataset.mode;
+      applyMode(m);
+      syncSettingsUI();
+      toast(m==="dark" ? "Тёмный режим" : "Светлый режим");
+    });
+
+    document.getElementById("logoSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      const l = b.dataset.logo;
+      applyLogo(l);
+      syncSettingsUI();
+      toast("Логотип обновлён");
+    });
+
+    document.getElementById("emojiSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      const v = b.dataset.emoji;
+      setEmoji(v === "on");
+      syncSettingsUI();
+      toast(v==="on" ? "Эмодзи включены" : "Эмодзи скрыты");
+    });
+
+    document.getElementById("autorefreshSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      const v = b.dataset.auto;
+      setAutoRefresh(v === "on");
+      syncSettingsUI();
+      toast(v==="on" ? "Автообновление включено" : "Автообновление выключено");
+    });
+
+    document.getElementById("clearCacheBtn").addEventListener("click", () => {
+      cacheByDay = null;
+      cacheDaysAhead = null;
+      allLoadedOnce = false;
+      toast("Кэш очищен");
+    });
+
+    // ================= SPLASH: min 3 sec + rotating text + tip =================
     function hideSplash(){
       const splash = document.getElementById("splash");
       if (!splash) return;
@@ -1247,26 +1620,59 @@
       setTimeout(() => splash.remove(), 350);
     }
 
+    const splashPhrases = [
+      "Загружаем домашку…",
+      "Проверяем обновления…",
+      "Подключаемся к классу…",
+    ];
+    const tips = [
+      "Совет: свайпай вкладки вправо/влево.",
+      "Совет: в “Всё ДЗ” можно прыгнуть к сегодня/завтра.",
+      "Совет: в настройках можно скрыть эмодзи предметов.",
+      "Совет: если данные странные — нажми “Очистить кэш”.",
+    ];
+
+    function setRandomTip(){
+      const el = document.getElementById("splashTip");
+      el.textContent = tips[Math.floor(Math.random()*tips.length)];
+    }
+
     // Init
     (async () => {
       if (tg){
-        try{
-          tg.ready();
-          tg.expand();
-        }catch(e){}
+        try{ tg.ready(); tg.expand(); }catch(e){}
       }
+
+      const splashSub = document.getElementById("splashSub");
+      setRandomTip();
+      let k = 0;
+      const rotate = setInterval(() => {
+        splashSub.textContent = splashPhrases[k % splashPhrases.length];
+        k++;
+      }, 700);
 
       const t0 = Date.now();
       const MIN_MS = 3000;
 
-      // Старт: завтра (вкладка 0 активна)
-      await loadTomorrow();
+      // автообновление: если выкл — не сбрасываем кэш (но кэша на старте ещё нет)
+      // если вкл — явно сбросим на всякий
+      if (isAutoRefreshOn()){
+        cacheByDay = null;
+        cacheDaysAhead = null;
+      }
+
+      // Start on "today" tab
       await loadToday();
+      await loadTomorrow();
       await loadPick(todayISO);
 
       const spent = Date.now() - t0;
       const left = Math.max(0, MIN_MS - spent);
-      setTimeout(hideSplash, left);
+
+      setTimeout(() => {
+        clearInterval(rotate);
+        hideSplash();
+      }, left);
     })();
   </script>
 </body>
