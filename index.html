@@ -2,8 +2,6 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-
-  <!-- Telegram WebApp API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -20,11 +18,14 @@
       --line: rgba(15, 23, 42, .10);
       --shadow: 0 18px 50px rgba(0,0,0,.10);
       --shadow-soft: 0 10px 30px rgba(0,0,0,.08);
+
       --accent: #007aff;
       --accent-2: #5ac8fa;
+
       --good: #34c759;
       --warn: #ff9500;
       --bad: #ff3b30;
+
       --radius: 18px;
       --radius2: 24px;
 
@@ -39,6 +40,19 @@
       --safe-bot: env(safe-area-inset-bottom);
       --safe-left: env(safe-area-inset-left);
       --safe-right: env(safe-area-inset-right);
+
+      --scale: 1;
+    }
+
+    html[data-accent="purple"]{
+      --accent: #8b5cf6;
+      --accent-2: #a78bfa;
+      --tap: rgba(139, 92, 246, .16);
+    }
+    html[data-accent="mint"]{
+      --accent: #14b8a6;
+      --accent-2: #2dd4bf;
+      --tap: rgba(20, 184, 166, .16);
     }
 
     html[data-theme="dark"]{
@@ -51,18 +65,21 @@
       --shadow: 0 18px 55px rgba(0,0,0,.55);
       --shadow-soft: 0 10px 30px rgba(0,0,0,.40);
 
-      --tap: rgba(90,200,250,.16);
       --chip: rgba(255,255,255,.08);
       --chip2: rgba(255,255,255,.12);
     }
+
+    html[data-text="s"]{ --scale: .94; }
+    html[data-text="m"]{ --scale: 1.00; }
+    html[data-text="l"]{ --scale: 1.10; }
 
     *{ box-sizing: border-box; }
     body{
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       background:
-        radial-gradient(900px 450px at 15% 10%, rgba(0,122,255,.18), transparent 55%),
-        radial-gradient(700px 380px at 85% 20%, rgba(90,200,250,.22), transparent 55%),
+        radial-gradient(900px 450px at 15% 10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+        radial-gradient(700px 380px at 85% 20%, color-mix(in srgb, var(--accent-2) 26%, transparent), transparent 55%),
         radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
         var(--bg);
       color: var(--text);
@@ -70,6 +87,14 @@
       padding: calc(16px + var(--safe-top)) calc(16px + var(--safe-right)) calc(16px + var(--safe-bot)) calc(16px + var(--safe-left));
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+
+      font-size: calc(14px * var(--scale));
+    }
+
+    body.modal-open{
+      height: 100svh;
+      overflow: hidden;
+      touch-action: none;
     }
 
     .app{
@@ -80,7 +105,6 @@
       gap: 16px;
       align-items: start;
     }
-
     @media (max-width: 980px){
       .app{ grid-template-columns: 1fr; }
     }
@@ -100,7 +124,6 @@
       top: calc(16px + var(--safe-top));
       padding: 18px;
     }
-
     @media (max-width: 980px){
       .sidebar{ position: relative; top: 0; }
     }
@@ -120,29 +143,29 @@
       background:
         radial-gradient(12px 12px at 25% 35%, rgba(255,255,255,.9), rgba(255,255,255,0) 55%),
         linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 12px 25px rgba(0,122,255,.20);
+      box-shadow: 0 12px 25px color-mix(in srgb, var(--accent) 22%, transparent);
       display: grid;
       place-items: center;
       color: #fff;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: -0.5px;
       user-select: none;
     }
 
     .brand h1{
-      font-size: 16px;
+      font-size: calc(16px * var(--scale));
       margin: 0;
       line-height: 1.2;
       letter-spacing: -0.2px;
     }
     .brand p{
       margin: 4px 0 0 0;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
     }
 
     .section-title{
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
       letter-spacing: .18em;
       text-transform: uppercase;
@@ -160,8 +183,18 @@
       background: rgba(255,255,255,.06);
     }
 
-    .pill.clickable{ cursor: pointer; }
-    .pill.clickable:active{ background: var(--tap); }
+    .pill-btn{
+      width: 100%;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 12px 12px;
+      text-align: left;
+      color: var(--text);
+    }
+    .pill-btn:active{ background: var(--tap); }
 
     .pill .left{
       display: flex;
@@ -178,23 +211,20 @@
       border: 1px solid var(--line);
       display: grid;
       place-items: center;
-      font-size: 16px;
+      font-size: calc(16px * var(--scale));
       user-select: none;
     }
 
-    .pill .meta{
-      min-width: 0;
-    }
-
+    .pill .meta{ min-width: 0; }
     .pill .meta .t{
-      font-size: 13px;
+      font-size: calc(13px * var(--scale));
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
     .pill .meta .s{
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       margin: 2px 0 0 0;
       color: var(--muted);
       white-space: nowrap;
@@ -204,14 +234,12 @@
 
     .hint{
       margin: 12px 2px 0;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
       line-height: 1.45;
     }
 
-    .main{
-      padding: 14px;
-    }
+    .main{ padding: 14px; }
 
     .topbar{
       display: flex;
@@ -220,20 +248,16 @@
       gap: 12px;
       padding: 6px 6px 12px;
     }
-    .topbar .title{
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .topbar .title{ display: flex; flex-direction: column; gap: 2px; }
     .topbar h2{
       margin: 0;
-      font-size: 18px;
+      font-size: calc(18px * var(--scale));
       letter-spacing: -0.3px;
       line-height: 1.2;
     }
     .topbar .sub{
       margin: 0;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
     }
 
@@ -242,7 +266,7 @@
       background: rgba(255,255,255,.06);
       border-radius: 999px;
       padding: 8px 10px;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
       display: inline-flex;
       align-items: center;
@@ -271,7 +295,7 @@
       color: var(--muted);
       padding: 10px 12px;
       border-radius: 14px;
-      font-size: 13px;
+      font-size: calc(13px * var(--scale));
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -318,11 +342,11 @@
     }
     .page-head h3{
       margin: 0;
-      font-size: 15px;
+      font-size: calc(15px * var(--scale));
       letter-spacing: -0.2px;
     }
     .page-head .note{
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
       margin: 0;
     }
@@ -332,7 +356,7 @@
       border-radius: 16px;
       padding: 12px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: calc(13px * var(--scale));
       line-height: 1.5;
       background: rgba(255,255,255,.04);
     }
@@ -349,7 +373,17 @@
       background: var(--surface-strong);
       box-shadow: 0 12px 28px rgba(0,0,0,.06);
       padding: 12px 12px;
+      position: relative;
     }
+    .hw-card.done{
+      opacity: .72;
+    }
+    .hw-card.done .hw-title{
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: color-mix(in srgb, var(--muted) 70%, transparent);
+    }
+
     .hw-top{
       display: flex;
       align-items: flex-start;
@@ -358,7 +392,7 @@
     }
     .hw-title{
       margin: 0;
-      font-size: 14px;
+      font-size: calc(14px * var(--scale));
       letter-spacing: -0.2px;
       line-height: 1.25;
       display: flex;
@@ -368,12 +402,12 @@
     }
     .hw-date{
       margin: 2px 0 0 0;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
     }
     .hw-text{
       margin: 10px 0 0;
-      font-size: 13px;
+      font-size: calc(13px * var(--scale));
       line-height: 1.55;
       white-space: pre-wrap;
       word-break: break-word;
@@ -381,7 +415,7 @@
 
     .badge{
       flex: 0 0 auto;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       padding: 6px 10px;
       border-radius: 999px;
       border: 1px solid var(--line);
@@ -396,6 +430,47 @@
     .badge.good{ color: var(--good); border-color: rgba(52,199,89,.35); background: rgba(52,199,89,.10); }
     .badge.warn{ color: var(--warn); border-color: rgba(255,149,0,.35); background: rgba(255,149,0,.10); }
 
+    .hw-actions{
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .iconbtn{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      font-size: calc(15px * var(--scale));
+    }
+    .iconbtn:active{ background: var(--tap); transform: translateY(1px); }
+
+    .checkwrap{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .checkwrap input{
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
     .row{
       display: grid;
       gap: 10px;
@@ -406,15 +481,12 @@
       .row{ grid-template-columns: 1fr; }
     }
 
-    .field{
-      display: grid;
-      gap: 6px;
-    }
+    .field{ display: grid; gap: 6px; }
     label{
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
     }
-    input[type="date"], input[type="text"], textarea{
+    input[type="date"], input[type="text"], textarea, input[type="search"]{
       width: 100%;
       border-radius: 16px;
       border: 1px solid var(--line);
@@ -422,7 +494,7 @@
       padding: 12px 12px;
       color: var(--text);
       outline: none;
-      font-size: 14px;
+      font-size: calc(14px * var(--scale));
     }
     textarea{
       resize: vertical;
@@ -442,7 +514,7 @@
       background: rgba(255,255,255,.06);
       color: var(--text);
       padding: 11px 12px;
-      font-size: 13px;
+      font-size: calc(13px * var(--scale));
       cursor: pointer;
       user-select: none;
       transition: .15s ease;
@@ -452,7 +524,7 @@
     }
     .btn.primary{
       border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-      background: color-mix(in srgb, var(--accent) 16%, transparent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
       color: var(--text);
     }
     .btn:active{ transform: translateY(1px); }
@@ -466,19 +538,23 @@
       border-radius: 999px;
       background: rgba(0,0,0,.78);
       color: #fff;
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       opacity: 0;
       pointer-events: none;
       transition: .18s ease;
       max-width: calc(100vw - 26px);
       text-align: center;
-      z-index: 50;
+      z-index: 140;
     }
-    html[data-theme="dark"] .toast{ background: rgba(255,255,255,.12); color: rgba(255,255,255,.92); border: 1px solid rgba(255,255,255,.12); }
+    html[data-theme="dark"] .toast{
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.12);
+    }
     .toast.show{ opacity: 1; }
 
     .small{
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
       line-height: 1.45;
       margin: 10px 0 0;
@@ -488,12 +564,12 @@
     .splash{
       position: fixed;
       inset: 0;
-      z-index: 100;
+      z-index: 200;
       display: grid;
       place-items: center;
       background:
-        radial-gradient(900px 450px at 15% 10%, rgba(0,122,255,.18), transparent 55%),
-        radial-gradient(700px 380px at 85% 20%, rgba(90,200,250,.22), transparent 55%),
+        radial-gradient(900px 450px at 15% 10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+        radial-gradient(700px 380px at 85% 20%, color-mix(in srgb, var(--accent-2) 26%, transparent), transparent 55%),
         radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
         var(--bg);
       transition: opacity .25s ease, transform .25s ease;
@@ -504,7 +580,7 @@
       pointer-events: none;
     }
     .splash-card{
-      width: min(380px, calc(100vw - 36px));
+      width: min(360px, calc(100vw - 36px));
       border-radius: 24px;
       border: 1px solid var(--line);
       background: var(--surface);
@@ -516,269 +592,408 @@
       gap: 12px;
       justify-items: center;
       text-align: center;
-      overflow: hidden;
     }
     .spinner{
       width: 44px;
       height: 44px;
       border-radius: 999px;
       border: 3px solid rgba(0,0,0,.10);
-      border-top-color: color-mix(in srgb, var(--accent) 92%, #000 0%);
+      border-top-color: color-mix(in srgb, var(--accent) 85%, transparent);
       animation: spin .85s linear infinite;
     }
     html[data-theme="dark"] .spinner{
       border-color: rgba(255,255,255,.14);
-      border-top-color: color-mix(in srgb, var(--accent-2) 95%, #fff 0%);
+      border-top-color: color-mix(in srgb, var(--accent-2) 95%, transparent);
     }
     @keyframes spin{ to { transform: rotate(360deg); } }
     .splash-title{
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: -0.2px;
+      font-size: calc(15px * var(--scale));
     }
     .splash-sub{
-      font-size: 12px;
+      font-size: calc(12px * var(--scale));
       color: var(--muted);
       line-height: 1.45;
       margin: 0;
-      min-height: 18px;
     }
-    .splash-tip{
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.45;
-      margin: 0;
-      padding-top: 2px;
-    }
-    .bar{
+    .progress{
       width: 100%;
-      height: 6px;
+      height: 4px;
       border-radius: 999px;
       background: rgba(0,0,0,.08);
-      border: 1px solid var(--line);
       overflow: hidden;
+      border: 1px solid var(--line);
     }
-    html[data-theme="dark"] .bar{ background: rgba(255,255,255,.10); }
-    .bar > i{
-      display: block;
-      height: 100%;
+    html[data-theme="dark"] .progress{ background: rgba(255,255,255,.08); }
+    .progress .bar{
       width: 40%;
-      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 80%, transparent), transparent);
-      animation: indet 1.1s ease-in-out infinite;
-      transform: translateX(-60%);
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: 999px;
+      animation: indet 1.05s ease-in-out infinite;
     }
     @keyframes indet{
-      0%{ transform: translateX(-60%); }
-      100%{ transform: translateX(220%); }
+      0%{ transform: translateX(-120%); }
+      100%{ transform: translateX(320%); }
+    }
+    .tip{
+      margin-top: -4px;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      line-height: 1.35;
     }
 
-    /* ===== Overlay / Modal ===== */
+    /* ===== Overlay sheets ===== */
     .overlay{
       position: fixed;
       inset: 0;
-      z-index: 120;
+      z-index: 160;
       display: none;
-      place-items: center;
-      padding: 16px;
-      background: rgba(0,0,0,.18);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      background: rgba(0,0,0,.36);
+      padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) calc(12px + var(--safe-bot)) calc(12px + var(--safe-left));
     }
-    html[data-theme="dark"] .overlay{ background: rgba(0,0,0,.35); }
-    .overlay.show{ display: grid; }
-
-    .modal{
-      width: min(520px, calc(100vw - 32px));
-      border-radius: 24px;
+    .overlay.show{
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sheet{
+      width: min(560px, 100%);
+      max-height: calc(100svh - 24px - var(--safe-top) - var(--safe-bot));
+      border-radius: 26px;
       border: 1px solid var(--line);
-      background: var(--surface);
+      background: var(--surface-strong);
       box-shadow: var(--shadow);
       overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
     }
-    .modal-head{
-      padding: 14px 16px;
+    .sheet-head{
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
     }
-    .modal-head h3{
-      margin: 0;
-      font-size: 15px;
+    .sheet-title{
+      font-weight: 900;
       letter-spacing: -.2px;
+      font-size: calc(14px * var(--scale));
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
     }
-    .modal-body{
-      padding: 14px 16px 16px;
-      display: grid;
-      gap: 12px;
+    .sheet-body{
+      padding: 12px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
     }
 
-    .opt-grid{
-      display: grid;
-      gap: 10px;
+    .setting{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+      margin-bottom: 10px;
     }
-    .opt{
+    .setting-top{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+    .setting-name{
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -.2px;
+      font-size: calc(13px * var(--scale));
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.06);
+      gap: 8px;
     }
-    .opt .left{
-      display: grid;
-      gap: 2px;
+    .setting-desc{
+      margin: 4px 0 0 0;
+      color: var(--muted);
+      font-size: calc(12px * var(--scale));
+      line-height: 1.35;
     }
-    .opt .t{ font-size: 13px; margin: 0; }
-    .opt .s{ font-size: 12px; color: var(--muted); margin: 0; }
 
     .seg{
-      display: flex;
-      gap: 10px;
+      display: inline-flex;
+      gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-end;
     }
     .seg button{
-      border-radius: 999px;
       border: 1px solid var(--line);
       background: rgba(255,255,255,.06);
       color: var(--text);
       padding: 8px 10px;
-      font-size: 12px;
+      border-radius: 999px;
+      font-size: calc(12px * var(--scale));
       cursor: pointer;
       user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
+    .seg button:active{ background: var(--tap); }
     .seg button[data-on="true"]{
       border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-      background: color-mix(in srgb, var(--accent) 18%, transparent);
-    }
-    .seg button:active{ transform: translateY(1px); }
-
-    .divider{
-      height: 1px;
-      background: var(--line);
-      margin: 2px 0;
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
     }
 
-    .mini{
-      font-size: 11px;
+    .searchbar{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 10px 12px;
+      margin-top: 8px;
+    }
+    .searchbar .sicon{
+      font-size: calc(14px * var(--scale));
       color: var(--muted);
-      line-height: 1.35;
-      margin: 0;
+      user-select: none;
+    }
+    .searchbar input{
+      border: 0;
+      background: transparent;
+      padding: 0;
+      outline: none;
+      font-size: calc(14px * var(--scale));
+      color: var(--text);
+    }
+    .searchbar .clear{
+      margin-left: auto;
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      font-size: calc(13px * var(--scale));
+    }
+    .searchbar .clear:active{ background: var(--tap); }
+
+    .muted-link{
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- Splash (min 3 seconds) -->
+  <!-- Splash (min 3 sec) -->
   <div class="splash" id="splash">
     <div class="splash-card">
       <div class="logo" id="splashLogo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
       <div class="spinner" aria-label="Загрузка"></div>
       <div class="splash-title" id="splashTitle">Домашнее задание</div>
       <p class="splash-sub" id="splashSub">Загружаем домашку…</p>
-      <div class="bar" aria-hidden="true"><i></i></div>
-      <p class="splash-tip" id="splashTip">Совет: свайпай вкладки вправо/влево.</p>
+      <div class="progress" aria-hidden="true"><div class="bar"></div></div>
+      <div class="tip" id="splashTip">Совет: нажми 📋, чтобы скопировать ДЗ.</div>
+    </div>
+  </div>
+
+  <!-- Mini splash for settings -->
+  <div class="splash" id="miniSplash" style="display:none;">
+    <div class="splash-card">
+      <div class="logo" id="miniLogo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
+      <div class="spinner" aria-label="Загрузка"></div>
+      <div class="splash-title">Настройки</div>
+      <p class="splash-sub" id="miniSub">Загружаем настройки…</p>
+      <div class="progress" aria-hidden="true"><div class="bar"></div></div>
+      <div class="tip" id="miniTip">Совет: можно скрыть эмодзи предметов.</div>
     </div>
   </div>
 
   <!-- Settings overlay -->
-  <div class="overlay" id="settingsOverlay" role="dialog" aria-modal="true">
-    <div class="modal" id="settingsModal">
-      <div class="modal-head">
-        <h3 id="settingsHeadTitle">Настройки</h3>
-        <button class="btn" id="settingsClose">✖ Закрыть</button>
+  <div class="overlay" id="settingsOverlay" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Настройки">
+      <div class="sheet-head">
+        <div class="sheet-title">⚙️ Настройки</div>
+        <button class="iconbtn" id="closeSettings" title="Закрыть">✕</button>
       </div>
+      <div class="sheet-body">
 
-      <!-- Loader inside settings -->
-      <div class="modal-body" id="settingsLoader" style="display:none; place-items:center; text-align:center;">
-        <div class="logo" style="width:54px;height:54px;border-radius:18px;" id="settingsLoaderLogo">DZ</div>
-        <div class="spinner" aria-label="Загрузка настроек"></div>
-        <div style="font-weight:800; letter-spacing:-.2px;">Загрузка настроек</div>
-        <p class="splash-sub" id="settingsLoaderSub" style="margin:0;">Подготавливаем интерфейс…</p>
-        <div class="bar"><i></i></div>
-        <p class="mini" style="margin:0;">Это занимает пару секунд.</p>
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🎨 Цветовая тема</p>
+              <p class="setting-desc">Стандарт / Фиолетовая / Мятная</p>
+            </div>
+            <div class="seg" id="accentSeg">
+              <button data-accent="standard">Стандарт</button>
+              <button data-accent="purple">Фиолет</button>
+              <button data-accent="mint">Мята</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🌓 Режим</p>
+              <p class="setting-desc">Светлый / Тёмный</p>
+            </div>
+            <div class="seg" id="modeSeg">
+              <button data-mode="light">Светлый</button>
+              <button data-mode="dark">Тёмный</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🧩 Логотип в шапке</p>
+              <p class="setting-desc">DZ / Книга / Тетрадь / Школа / Сова</p>
+            </div>
+            <div class="seg" id="logoSeg">
+              <button data-logo="dz">DZ</button>
+              <button data-logo="book">📘</button>
+              <button data-logo="notebook">🗒️</button>
+              <button data-logo="school">🏫</button>
+              <button data-logo="owl">🦉</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🙂 Эмодзи предметов</p>
+              <p class="setting-desc">Показывать/скрыть эмодзи перед названием</p>
+            </div>
+            <div class="seg" id="emojiSeg">
+              <button data-emoji="on">Показывать</button>
+              <button data-emoji="off">Скрыть</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">✅ Отметки “сделано”</p>
+              <p class="setting-desc">Галочки возле каждого ДЗ</p>
+            </div>
+            <div class="seg" id="doneSeg">
+              <button data-done="on">Вкл</button>
+              <button data-done="off">Выкл</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🔠 Размер текста</p>
+              <p class="setting-desc">Выбери удобный размер (пример “Aa”)</p>
+            </div>
+            <div class="seg" id="textSeg">
+              <button data-text="s"><span style="font-size:12px;">Aa</span> S</button>
+              <button data-text="m"><span style="font-size:14px;">Aa</span> M</button>
+              <button data-text="l"><span style="font-size:16px;">Aa</span> L</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🔄 Автообновление</p>
+              <p class="setting-desc">Обновлять данные при открытии, если кэш устарел</p>
+            </div>
+            <div class="seg" id="autoSeg">
+              <button data-auto="on">Вкл</button>
+              <button data-auto="off">Выкл</button>
+            </div>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:10px; align-items:center; justify-content:space-between;">
+            <div style="color:var(--muted); font-size:calc(12px * var(--scale));">Считать устаревшим через:</div>
+            <div class="seg" id="staleSeg">
+              <button data-stale="5">5м</button>
+              <button data-stale="15">15м</button>
+              <button data-stale="30">30м</button>
+              <button data-stale="60">60м</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🧽 Очистка кэша</p>
+              <p class="setting-desc">Если что-то сломалось — очисти кэш и перезайди</p>
+            </div>
+            <div class="seg" id="confirmSeg">
+              <button data-confirm="on">Подтверждать</button>
+              <button data-confirm="off">Без подтверждения</button>
+            </div>
+          </div>
+          <div class="btns">
+            <button class="btn" id="clearCacheBtn">🧽 Очистить кэш</button>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🐞 Ошибка / отчёт</p>
+              <p class="setting-desc">Откроется форма и отправит сообщение через бота</p>
+            </div>
+            <div class="seg">
+              <button id="openReport">Открыть</button>
+            </div>
+          </div>
+          <p class="setting-desc" style="margin-top:8px;">
+            Если ты не в Telegram — можно просто открыть <span class="muted-link" id="openDev">@Temo4ka4</span>.
+          </p>
+        </div>
+
+        <p class="small" style="margin-top:12px;">
+          Настройки сохраняются на этом устройстве.
+        </p>
+
       </div>
+    </div>
+  </div>
 
-      <!-- Real settings content -->
-      <div class="modal-body" id="settingsBody" style="display:none;">
-        <div class="opt">
-          <div class="left">
-            <p class="t">🎨 Цветовая тема</p>
-            <p class="s">Стандартная / Фиолетовая / Мятная</p>
-          </div>
-          <div class="seg" id="presetSeg">
-            <button type="button" data-preset="standard">Стандарт</button>
-            <button type="button" data-preset="purple">Фиолет</button>
-            <button type="button" data-preset="mint">Мята</button>
-          </div>
+  <!-- Report overlay -->
+  <div class="overlay" id="reportOverlay" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Отчёт об ошибке">
+      <div class="sheet-head">
+        <div class="sheet-title">🐞 Отчёт</div>
+        <button class="iconbtn" id="closeReport" title="Закрыть">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="field">
+          <label for="repText">Опиши проблему</label>
+          <textarea id="repText" placeholder="Что произошло? В какой вкладке? Что ожидал?"></textarea>
         </div>
-
-        <div class="opt">
-          <div class="left">
-            <p class="t">🌗 Режим</p>
-            <p class="s">Светлый / Тёмный</p>
-          </div>
-          <div class="seg" id="modeSeg">
-            <button type="button" data-mode="light">Светлый</button>
-            <button type="button" data-mode="dark">Тёмный</button>
-          </div>
+        <div class="btns">
+          <button class="btn primary" id="sendReport">📨 Отправить</button>
+          <button class="btn" id="copyReport">📋 Скопировать</button>
         </div>
-
-        <div class="divider"></div>
-
-        <div class="opt">
-          <div class="left">
-            <p class="t">🧷 Логотип в шапке</p>
-            <p class="s">DZ / Книга / Тетрадь / Школа / Сова</p>
-          </div>
-          <div class="seg" id="logoSeg">
-            <button type="button" data-logo="dz">DZ</button>
-            <button type="button" data-logo="book">📘</button>
-            <button type="button" data-logo="notebook">📓</button>
-            <button type="button" data-logo="school">🏫</button>
-            <button type="button" data-logo="owl">🦉</button>
-          </div>
-        </div>
-
-        <div class="opt">
-          <div class="left">
-            <p class="t">🙂 Эмодзи предметов</p>
-            <p class="s">Показывать/скрывать эмодзи перед названием</p>
-          </div>
-          <div class="seg" id="emojiSeg">
-            <button type="button" data-emoji="on">Показывать</button>
-            <button type="button" data-emoji="off">Скрыть</button>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="opt">
-          <div class="left">
-            <p class="t">🔄 Автообновление</p>
-            <p class="s">Обновлять данные автоматически при открытии</p>
-          </div>
-          <div class="seg" id="autorefreshSeg">
-            <button type="button" data-auto="on">Вкл</button>
-            <button type="button" data-auto="off">Выкл</button>
-          </div>
-        </div>
-
-        <div class="opt">
-          <div class="left">
-            <p class="t">🧹 Очистить кэш</p>
-            <p class="s">Если что-то сломалось или данные не те</p>
-          </div>
-          <div class="seg">
-            <button type="button" id="clearCacheBtn">Очистить</button>
-          </div>
-        </div>
-
-        <p class="mini">Настройки сохраняются на устройстве (localStorage).</p>
+        <p class="small">
+          Отправка работает через Telegram WebApp. Если открыть в браузере — можно скопировать текст и написать разработчику вручную.
+        </p>
       </div>
     </div>
   </div>
@@ -787,7 +1002,7 @@
     <!-- LEFT -->
     <aside class="card sidebar">
       <div class="brand">
-        <div class="logo" id="brandLogo">DZ</div>
+        <div class="logo" id="appLogo">DZ</div>
         <div>
           <h1>Домашнее Задание • WebApp</h1>
           <p id="who">подключение…</p>
@@ -796,24 +1011,25 @@
 
       <div class="section-title">Разделы</div>
 
-      <!-- settings button -->
-      <div class="pill clickable" id="openSettings">
-        <div class="left">
-          <div class="icon">⚙️</div>
-          <div class="meta">
-            <p class="t">Настройки</p>
-            <p class="s" id="settingsSubline">Тема • логотип • обновление</p>
+      <button class="pill-btn" id="openSettingsBtn">
+        <div class="pill" style="border:0; padding:0; background:transparent;">
+          <div class="left">
+            <div class="icon">⚙️</div>
+            <div class="meta">
+              <p class="t">Настройки</p>
+              <p class="s" id="settingsSummary">Тема • Логотип • Кэш</p>
+            </div>
           </div>
+          <div class="icon" style="width:34px;height:34px;">›</div>
         </div>
-        <span class="badge">Открыть</span>
-      </div>
+      </button>
 
       <p class="hint">
-        Свайпай вкладки справа. Настройки сохраняются на устройстве.
+        Здесь можно поменять тему, логотип, размер текста, включить галочки “сделано” и почистить кэш.
       </p>
 
       <p class="hint" id="initHint">
-        Если ты открыл это не из Telegram-кнопки — данные пользователя могут быть недоступны.
+        Если ты открыл это не из Telegram-кнопки — некоторые функции (например “Предложить ДЗ”) работать не будут.
       </p>
     </aside>
 
@@ -828,7 +1044,7 @@
         <span class="chip" id="todayChip">📅 —</span>
       </div>
 
-      <!-- Tabs order: today, tomorrow, all, date, suggest -->
+      <!-- Tabs order: today, tomorrow, all, pick date, suggest -->
       <div class="tabs" id="tabs">
         <button class="tab" data-index="0" data-active="true">📅 На сегодня</button>
         <button class="tab" data-index="1">📆 На завтра</button>
@@ -870,10 +1086,16 @@
         <section class="page" data-index="2">
           <div class="page-head">
             <div>
-              <h3>Показать всё ДЗ</h3>
-              <p class="note">По дням, аккуратно карточками</p>
+              <h3>Всё ДЗ</h3>
+              <p class="note">По дням • поиск • галочки</p>
             </div>
             <span class="badge" id="allCount">—</span>
+          </div>
+
+          <div class="searchbar">
+            <div class="sicon">🔎</div>
+            <input id="allSearch" type="search" placeholder="Поиск по предмету и тексту…" />
+            <button class="clear" id="allSearchClear" title="Очистить">✕</button>
           </div>
 
           <div class="btns">
@@ -882,7 +1104,7 @@
             <button class="btn" id="jumpTomorrow">📆 К завтра</button>
           </div>
 
-          <p class="small">Если ДЗ много — листай вниз. Здесь показывается диапазон, чтобы не душить базу.</p>
+          <p class="small">Нажми 📋 на карточке — скопировать. Галочки “сделано” сохраняются на устройстве.</p>
 
           <div class="hw-list" id="allList">
             <div class="skeleton">Загружаю…</div>
@@ -894,7 +1116,7 @@
           <div class="page-head">
             <div>
               <h3>ДЗ по дате</h3>
-              <p class="note">Выбирай день и смотри ДЗ</p>
+              <p class="note">Выбирай день и смотри</p>
             </div>
             <span class="badge" id="pickCount">—</span>
           </div>
@@ -924,7 +1146,7 @@
           <div class="page-head">
             <div>
               <h3>Предложить ДЗ</h3>
-              <p class="note">Отправим в бота предложением</p>
+              <p class="note">Отправим предложением в бота</p>
             </div>
             <span class="badge good">✨</span>
           </div>
@@ -947,13 +1169,19 @@
 
           <div class="btns">
             <button class="btn primary" id="sendSuggest">✉️ Отправить</button>
+            <button class="btn" id="copySuggest">📋 Скопировать</button>
             <button class="btn" id="clearSuggest">🧽 Очистить</button>
           </div>
 
-          <p class="small">
-            Отправка идёт через <b>Telegram.WebApp.sendData()</b>. После отправки бот должен прислать подтверждение.
+          <p class="small" id="suggestHint">
+            Отправка работает через Telegram WebApp. Если открыть это в браузере — нажми “Скопировать” и вставь в чат бота.
           </p>
+
+          <div class="btns">
+            <button class="btn" id="openBot">🤖 Открыть бота</button>
+          </div>
         </section>
+
       </div>
     </main>
   </div>
@@ -962,113 +1190,26 @@
 
   <script>
     // ================= SETTINGS KEYS =================
-    const THEME_MODE_KEY = "dz_webapp_mode"; // "light" | "dark"
-    const THEME_PRESET_KEY = "dz_webapp_preset"; // "standard" | "purple" | "mint"
-    const LOGO_KEY = "dz_webapp_logo"; // "dz" | "book" | "notebook" | "school" | "owl"
-    const EMOJI_KEY = "dz_webapp_emoji"; // "on" | "off"
-    const AUTOREFRESH_KEY = "dz_webapp_autorefresh"; // "on" | "off"
+    const THEME_KEY = "dz_webapp_theme";             // light|dark
+    const ACCENT_KEY = "dz_webapp_accent";           // standard|purple|mint
+    const LOGO_KEY = "dz_webapp_logo";               // dz|book|notebook|school|owl
+    const EMOJI_KEY = "dz_webapp_emoji";             // on|off
+    const DONE_KEY = "dz_webapp_done";               // on|off
+    const TEXT_KEY = "dz_webapp_text";               // s|m|l
+    const AUTO_KEY = "dz_webapp_autorefresh";        // on|off
+    const STALE_KEY = "dz_webapp_stale_min";         // number
+    const CONFIRM_KEY = "dz_webapp_confirm_clear";   // on|off
 
-    const PRESETS = {
-      standard: { accent:"#007aff", accent2:"#5ac8fa" },
-      purple:   { accent:"#7c3aed", accent2:"#a78bfa" },
-      mint:     { accent:"#10b981", accent2:"#2dd4bf" },
-    };
+    const HW_CACHE_KEY = "dz_hw_cache_v2";           // { [daysAhead]: {ts, byDay} }
+    const DONE_MAP_KEY = "dz_hw_done_v2";            // { [id]: true }
 
-    const LOGOS = {
-      dz: "DZ",
-      book: "📘",
-      notebook: "📓",
-      school: "🏫",
-      owl: "🦉",
-    };
-
-    function getLS(key, fallback){
-      const v = localStorage.getItem(key);
-      return (v === null || v === undefined || v === "") ? fallback : v;
-    }
-    function setLS(key, val){ localStorage.setItem(key, String(val)); }
-
-    function applyPreset(preset){
-      const p = PRESETS[preset] || PRESETS.standard;
-      document.documentElement.style.setProperty("--accent", p.accent);
-      document.documentElement.style.setProperty("--accent-2", p.accent2);
-      setLS(THEME_PRESET_KEY, preset);
-      updateSettingsSubline();
-    }
-
-    function applyMode(mode){
-      const root = document.documentElement;
-      root.dataset.theme = (mode === "dark") ? "dark" : "light";
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", (mode === "dark") ? "#0b1020" : "#ffffff");
-      setLS(THEME_MODE_KEY, mode);
-      updateSettingsSubline();
-    }
-
-    function applyLogo(logo){
-      const v = LOGOS[logo] || "DZ";
-      document.getElementById("brandLogo").textContent = v;
-      document.getElementById("splashLogo").textContent = v;
-      document.getElementById("settingsLoaderLogo").textContent = v;
-      setLS(LOGO_KEY, logo);
-      updateSettingsSubline();
-    }
-
-    function isEmojiOn(){
-      return getLS(EMOJI_KEY, "on") === "on";
-    }
-
-    function setEmoji(on){
-      setLS(EMOJI_KEY, on ? "on" : "off");
-      // перерисуем текущие листы (если уже загружены)
-      if (cacheByDay) {
-        loadToday();
-        loadTomorrow();
-        if (allLoadedOnce) loadAll();
-      }
-      updateSettingsSubline();
-    }
-
-    function isAutoRefreshOn(){
-      return getLS(AUTOREFRESH_KEY, "on") === "on";
-    }
-    function setAutoRefresh(on){
-      setLS(AUTOREFRESH_KEY, on ? "on" : "off");
-      updateSettingsSubline();
-    }
-
-    function updateSettingsSubline(){
-      const preset = getLS(THEME_PRESET_KEY, "standard");
-      const mode = getLS(THEME_MODE_KEY, "light");
-      const logo = getLS(LOGO_KEY, "dz");
-      const emoji = getLS(EMOJI_KEY, "on");
-      const auto = getLS(AUTOREFRESH_KEY, "on");
-
-      const presetName = (preset==="purple") ? "фиолет" : (preset==="mint" ? "мята" : "станд");
-      const modeName = (mode==="dark") ? "тёмн" : "светл";
-      const logoName = (logo==="dz") ? "DZ" : LOGOS[logo];
-      const emojiName = (emoji==="on") ? "эмодзи" : "без эмодзи";
-      const autoName = (auto==="on") ? "автообн" : "без автообн";
-
-      document.getElementById("settingsSubline").textContent =
-        `${presetName} • ${modeName} • ${logoName} • ${emojiName} • ${autoName}`;
-    }
-
-    // init settings (apply on load)
-    applyPreset(getLS(THEME_PRESET_KEY, "standard"));
-    applyMode(getLS(THEME_MODE_KEY, "light"));
-    applyLogo(getLS(LOGO_KEY, "dz"));
-    updateSettingsSubline();
-
-    // ================= TOAST =================
+    // ================= SMALL UTILS =================
     function toast(msg){
       const el = document.getElementById("toast");
       el.textContent = msg;
       el.classList.add("show");
       setTimeout(() => el.classList.remove("show"), 1300);
     }
-
-    // ================= DATE UTILS =================
     function pad2(n){ return String(n).padStart(2,"0"); }
     function toISODate(d){
       return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
@@ -1087,9 +1228,7 @@
         const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
         const nice = formatRu(dt);
         return `${weekday}, ${nice}`;
-      }catch(e){
-        return iso;
-      }
+      }catch(e){ return iso; }
     }
     function calcDaysAhead(dateStr){
       const [y,m,d] = dateStr.split("-").map(Number);
@@ -1097,6 +1236,26 @@
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       return Math.floor((target - today) / 86400000);
+    }
+    async function copyToClipboard(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }catch(e){
+        try{
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.focus(); ta.select();
+          const ok = document.execCommand("copy");
+          ta.remove();
+          return ok;
+        }catch(_){
+          return false;
+        }
+      }
     }
 
     // ================= TELEGRAM WEBAPP =================
@@ -1121,33 +1280,28 @@
     }
     setWho();
 
-    // ================= API =================
+    // ================= API BASE =================
     const API_BASE = "https://api.temo4ka4.ru";
 
     async function fetchMaybeJson(url, options){
       const res = await fetch(url, options);
       const text = await res.text();
-
       let data = null;
       if (text && text.trim().length){
         try { data = JSON.parse(text); } catch { data = text; }
       }
-
       if (!res.ok){
         const detail = (data && typeof data === "object" && (data.detail || data.error)) ? (data.detail || data.error) : null;
         const msg = detail || (typeof data === "string" ? data.slice(0, 200) : `HTTP ${res.status}`);
         throw new Error(msg);
       }
-
       return data;
     }
 
     async function apiHomeworkRange(daysAhead = 30){
       const initData = getInitData();
       if (!initData) throw new Error("no_initData");
-
       const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
-
       return await fetchMaybeJson(url, {
         method: "GET",
         headers: {
@@ -1165,23 +1319,14 @@
         return { [todayISO]: [apiData] };
       }
       if (typeof apiData !== "object") return {};
-
-      if (apiData.by_day && typeof apiData.by_day === "object" && !Array.isArray(apiData.by_day)) {
-        return apiData.by_day;
-      }
-      if (Array.isArray(apiData.days)) {
-        const by = {};
-        for (const d of apiData.days) {
-          if (d && d.day) by[d.day] = Array.isArray(d.items) ? d.items : [];
-        }
-        return by;
-      }
+      if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
+      if (apiData.days && typeof apiData.days === "object") return apiData.days;
       const keys = Object.keys(apiData);
       if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
       return {};
     }
 
-    // ===== Subject emoji mapping =====
+    // ================= SUBJECT EMOJI =================
     const SUBJECT_EMOJI = [
       { re: /алгебр/i, e: "📐" },
       { re: /геометр/i, e: "📏" },
@@ -1201,7 +1346,6 @@
       { re: /изо|рисован/i, e: "🎨" },
       { re: /физкульт|спорт/i, e: "🏃" },
     ];
-
     function emojiForSubject(subject){
       const s = (subject || "").trim();
       if (!s) return "📝";
@@ -1209,55 +1353,390 @@
       return hit ? hit.e : "📝";
     }
 
+    // ================= SETTINGS LOAD/SAVE =================
+    function lsGet(key, fallback){ const v = localStorage.getItem(key); return (v===null||v===undefined||v==="") ? fallback : v; }
+    function lsSet(key, value){ localStorage.setItem(key, String(value)); }
+
+    function applyTheme(theme){
+      const root = document.documentElement;
+      root.dataset.theme = (theme === "dark") ? "dark" : "light";
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", theme === "dark" ? "#0b1020" : "#ffffff");
+      syncSegButtons();
+    }
+    function applyAccent(accent){
+      const root = document.documentElement;
+      root.dataset.accent = (accent === "purple" || accent === "mint") ? accent : "standard";
+      syncSegButtons();
+    }
+    function applyTextSize(v){
+      const root = document.documentElement;
+      root.dataset.text = (v === "s" || v === "l") ? v : "m";
+      syncSegButtons();
+    }
+
+    function logoGlyph(key){
+      switch(key){
+        case "book": return "📘";
+        case "notebook": return "🗒️";
+        case "school": return "🏫";
+        case "owl": return "🦉";
+        default: return "DZ";
+      }
+    }
+    function applyLogo(key){
+      const g = logoGlyph(key);
+      document.getElementById("appLogo").textContent = g;
+      document.getElementById("splashLogo").textContent = g;
+      document.getElementById("miniLogo").textContent = g;
+      syncSegButtons();
+    }
+
+    function getShowEmoji(){ return lsGet(EMOJI_KEY, "on") === "on"; }
+    function getEnableDone(){ return lsGet(DONE_KEY, "on") === "on"; }
+    function getAutoRefresh(){ return lsGet(AUTO_KEY, "on") === "on"; }
+    function getStaleMin(){
+      const v = parseInt(lsGet(STALE_KEY, "15"), 10);
+      return [5,15,30,60].includes(v) ? v : 15;
+    }
+    function getConfirmClear(){ return lsGet(CONFIRM_KEY, "on") === "on"; }
+
+    function syncSegButtons(){
+      const theme = lsGet(THEME_KEY, "light");
+      const accent = lsGet(ACCENT_KEY, "standard");
+      const logo = lsGet(LOGO_KEY, "dz");
+      const emoji = lsGet(EMOJI_KEY, "on");
+      const done = lsGet(DONE_KEY, "on");
+      const text = lsGet(TEXT_KEY, "m");
+      const auto = lsGet(AUTO_KEY, "on");
+      const stale = String(getStaleMin());
+      const confirm = lsGet(CONFIRM_KEY, "on");
+
+      document.querySelectorAll("#modeSeg button").forEach(b => b.dataset.on = (b.dataset.mode === theme) ? "true" : "false");
+      document.querySelectorAll("#accentSeg button").forEach(b => b.dataset.on = (b.dataset.accent === accent) ? "true" : "false");
+      document.querySelectorAll("#logoSeg button").forEach(b => b.dataset.on = (b.dataset.logo === logo) ? "true" : "false");
+      document.querySelectorAll("#emojiSeg button").forEach(b => b.dataset.on = ((b.dataset.emoji === "on") === (emoji === "on")) ? "true" : "false");
+      document.querySelectorAll("#doneSeg button").forEach(b => b.dataset.on = ((b.dataset.done === "on") === (done === "on")) ? "true" : "false");
+      document.querySelectorAll("#textSeg button").forEach(b => b.dataset.on = (b.dataset.text === text) ? "true" : "false");
+      document.querySelectorAll("#autoSeg button").forEach(b => b.dataset.on = ((b.dataset.auto === "on") === (auto === "on")) ? "true" : "false");
+      document.querySelectorAll("#staleSeg button").forEach(b => b.dataset.on = (b.dataset.stale === stale) ? "true" : "false");
+      document.querySelectorAll("#confirmSeg button").forEach(b => b.dataset.on = ((b.dataset.confirm === "on") === (confirm === "on")) ? "true" : "false");
+
+      const sum = [];
+      sum.push(theme === "dark" ? "Тёмная" : "Светлая");
+      sum.push(accent === "purple" ? "Фиолет" : (accent === "mint" ? "Мята" : "Стандарт"));
+      sum.push("Текст " + text.toUpperCase());
+      document.getElementById("settingsSummary").textContent = sum.join(" • ");
+    }
+
+    function initSettings(){
+      const theme = lsGet(THEME_KEY, "light");
+      const accent = lsGet(ACCENT_KEY, "standard");
+      const logo = lsGet(LOGO_KEY, "dz");
+      const text = lsGet(TEXT_KEY, "m");
+
+      applyTheme(theme);
+      applyAccent(accent);
+      applyLogo(logo);
+      applyTextSize(text);
+
+      syncSegButtons();
+    }
+    initSettings();
+
+    // ================= SETTINGS OVERLAYS =================
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const reportOverlay = document.getElementById("reportOverlay");
+
+    function openOverlay(overlayEl){
+      overlayEl.classList.add("show");
+      overlayEl.setAttribute("aria-hidden","false");
+      document.body.classList.add("modal-open");
+    }
+    function closeOverlay(overlayEl){
+      overlayEl.classList.remove("show");
+      overlayEl.setAttribute("aria-hidden","true");
+      if (![settingsOverlay, reportOverlay].some(o => o.classList.contains("show"))){
+        document.body.classList.remove("modal-open");
+      }
+    }
+
+    function showMiniSplash(text, tip){
+      const el = document.getElementById("miniSplash");
+      document.getElementById("miniSub").textContent = text || "Загружаем настройки…";
+      document.getElementById("miniTip").textContent = tip || "Совет: можно очистить кэш, если что-то сломалось.";
+      el.style.display = "grid";
+      return () => { el.style.display = "none"; };
+    }
+
+    document.getElementById("openSettingsBtn").addEventListener("click", () => {
+      const hide = showMiniSplash("Загрузка настроек…", "Совет: включи галочки “сделано”.");
+      setTimeout(() => {
+        hide();
+        openOverlay(settingsOverlay);
+      }, 3000);
+    });
+
+    document.getElementById("closeSettings").addEventListener("click", () => closeOverlay(settingsOverlay));
+    settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeOverlay(settingsOverlay); });
+
+    document.getElementById("openReport").addEventListener("click", () => openOverlay(reportOverlay));
+    document.getElementById("closeReport").addEventListener("click", () => closeOverlay(reportOverlay));
+    reportOverlay.addEventListener("click", (e) => { if (e.target === reportOverlay) closeOverlay(reportOverlay); });
+
+    // clickable @Temo4ka4
+    document.getElementById("openDev").addEventListener("click", () => {
+      const url = "https://t.me/Temo4ka4";
+      if (tg?.openTelegramLink) tg.openTelegramLink(url);
+      else window.open(url, "_blank");
+    });
+
+    // ================= SEG BUTTONS HANDLERS =================
+    document.getElementById("modeSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-mode]"); if (!b) return;
+      lsSet(THEME_KEY, b.dataset.mode);
+      applyTheme(b.dataset.mode);
+      toast(b.dataset.mode === "dark" ? "Тёмный режим" : "Светлый режим");
+      // перерендерим, чтобы линии/вид был норм
+      rerenderAllVisible();
+    });
+
+    document.getElementById("accentSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-accent]"); if (!b) return;
+      lsSet(ACCENT_KEY, b.dataset.accent);
+      applyAccent(b.dataset.accent);
+      toast("Тема: " + (b.dataset.accent === "purple" ? "Фиолет" : b.dataset.accent === "mint" ? "Мята" : "Стандарт"));
+    });
+
+    document.getElementById("logoSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-logo]"); if (!b) return;
+      lsSet(LOGO_KEY, b.dataset.logo);
+      applyLogo(b.dataset.logo);
+      toast("Логотип изменён");
+    });
+
+    document.getElementById("emojiSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-emoji]"); if (!b) return;
+      lsSet(EMOJI_KEY, b.dataset.emoji);
+      syncSegButtons();
+      toast(b.dataset.emoji === "on" ? "Эмодзи включены" : "Эмодзи скрыты");
+      rerenderAllVisible();
+    });
+
+    document.getElementById("doneSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-done]"); if (!b) return;
+      lsSet(DONE_KEY, b.dataset.done === "on" ? "on" : "off");
+      syncSegButtons();
+      toast(b.dataset.done === "on" ? "Галочки включены" : "Галочки выключены");
+      rerenderAllVisible();
+    });
+
+    document.getElementById("textSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-text]"); if (!b) return;
+      lsSet(TEXT_KEY, b.dataset.text);
+      applyTextSize(b.dataset.text);
+      toast("Размер текста: " + b.dataset.text.toUpperCase());
+    });
+
+    document.getElementById("autoSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-auto]"); if (!b) return;
+      lsSet(AUTO_KEY, b.dataset.auto === "on" ? "on" : "off");
+      syncSegButtons();
+      toast(b.dataset.auto === "on" ? "Автообновление: Вкл" : "Автообновление: Выкл");
+    });
+
+    document.getElementById("staleSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-stale]"); if (!b) return;
+      lsSet(STALE_KEY, b.dataset.stale);
+      syncSegButtons();
+      toast("Устаревание: " + b.dataset.stale + " мин");
+    });
+
+    document.getElementById("confirmSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-confirm]"); if (!b) return;
+      lsSet(CONFIRM_KEY, b.dataset.confirm === "on" ? "on" : "off");
+      syncSegButtons();
+      toast(b.dataset.confirm === "on" ? "Будем спрашивать" : "Без подтверждения");
+    });
+
+    // ================= CACHING =================
+    function readHwCache(){
+      try{
+        const raw = localStorage.getItem(HW_CACHE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      }catch(e){
+        return {};
+      }
+    }
+    function writeHwCache(cacheObj){
+      try{ localStorage.setItem(HW_CACHE_KEY, JSON.stringify(cacheObj)); }catch(e){}
+    }
+    function getHwCache(daysAhead){
+      const all = readHwCache();
+      return all[String(daysAhead)] || null;
+    }
+    function setHwCache(daysAhead, byDay){
+      const all = readHwCache();
+      all[String(daysAhead)] = { ts: Date.now(), byDay };
+      writeHwCache(all);
+    }
+    function clearHwCache(){
+      try{ localStorage.removeItem(HW_CACHE_KEY); }catch(e){}
+    }
+
+    // ================= DONE MAP =================
+    function readDoneMap(){
+      try{
+        const raw = localStorage.getItem(DONE_MAP_KEY);
+        return raw ? JSON.parse(raw) : {};
+      }catch(e){ return {}; }
+    }
+    function writeDoneMap(m){
+      try{ localStorage.setItem(DONE_MAP_KEY, JSON.stringify(m)); }catch(e){}
+    }
+    function isDone(id){
+      const m = readDoneMap();
+      return !!m[id];
+    }
+    function setDone(id, value){
+      const m = readDoneMap();
+      if (value) m[id] = true;
+      else delete m[id];
+      writeDoneMap(m);
+    }
+
+    // ================= SPLASH TEXT ROTATION =================
+    const splashLines = [
+      "Загружаем домашку…",
+      "Проверяем обновления…",
+      "Подключаемся к классу…",
+      "Собираем задания по предметам…"
+    ];
+    const splashTips = [
+      "Совет: нажми 📋, чтобы скопировать ДЗ.",
+      "Совет: в “Всё ДЗ” есть поиск 🔎.",
+      "Совет: можно скрыть эмодзи предметов.",
+      "Совет: включи галочки “сделано”."
+    ];
+    function setSplashText(){
+      document.getElementById("splashSub").textContent = splashLines[Math.floor(Math.random()*splashLines.length)];
+      document.getElementById("splashTip").textContent = splashTips[Math.floor(Math.random()*splashTips.length)];
+    }
+    setSplashText();
+
+    // ================= DATA LOADING =================
+    const now = new Date();
+    const todayISO = toISODate(now);
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrowISO = toISODate(tomorrow);
+
+    document.getElementById("todayChip").textContent = "📅 " + formatRu(now);
+    document.getElementById("tomorrowNote").textContent = prettyDateLabel(tomorrowISO);
+    document.getElementById("todayNote").textContent = prettyDateLabel(todayISO);
+
+    const pickDateEl = document.getElementById("pickDate");
+    const sDateEl = document.getElementById("sDate");
+    pickDateEl.value = todayISO;
+    sDateEl.value = todayISO;
+
+    let cacheByDayMem = null;
+    let cacheDaysAheadMem = null;
+
+    async function ensureCache(daysAhead){
+      // memory cache
+      if (cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
+
+      const auto = getAutoRefresh();
+      const staleMin = getStaleMin();
+
+      // localStorage cache
+      const cached = getHwCache(daysAhead);
+      const isStale = cached ? ((Date.now() - cached.ts) > staleMin*60*1000) : true;
+
+      if (cached && (!auto || !isStale)){
+        cacheByDayMem = cached.byDay;
+        cacheDaysAheadMem = daysAhead;
+        return cached.byDay;
+      }
+
+      // fetch
+      const data = await apiHomeworkRange(daysAhead);
+      const byDay = normalizeByDay(data);
+      cacheByDayMem = byDay;
+      cacheDaysAheadMem = daysAhead;
+      setHwCache(daysAhead, byDay);
+      return byDay;
+    }
+
+    // store for copy/search
+    const hwStore = {}; // id -> {date, subject, body}
+
+    function hwId(dateISO, subject, body){
+      const s = (dateISO||"") + "|" + (subject||"") + "|" + (body||"");
+      // djb2
+      let h = 5381;
+      for (let i=0;i<s.length;i++) h = ((h << 5) + h) + s.charCodeAt(i);
+      return "h" + (h >>> 0).toString(16);
+    }
+
     function extractSubjectAndBody(line){
       const obj = (typeof line === "object" && line) ? line : null;
       const rawText = (typeof line === "string") ? line : (obj?.text ?? "");
-
       let subject = (obj?.subject || "").trim();
       let body = rawText;
 
       if (!subject) {
-        const mm = rawText.match(/^(.{1,40}?)\s*[—-]\s*(.+)$/);
+        const mm = rawText.match(/^(.{1,50}?)\s*[—-]\s*(.+)$/);
         if (mm) {
           subject = (mm[1] || "").trim();
           body = (mm[2] || "").trim();
         }
       }
-
       if (!subject) subject = "Домашка";
       return { subject, body };
     }
 
+    function buildTitle(subject){
+      if (!getShowEmoji()) return subject;
+      const em = emojiForSubject(subject);
+      return `${em} ${subject}`;
+    }
+
+    function cardHtml(dateISO, line){
+      const { subject, body } = extractSubjectAndBody(line);
+      const id = hwId(dateISO, subject, body);
+      hwStore[id] = { date: dateISO, subject, body };
+
+      const enableDone = getEnableDone();
+      const done = enableDone ? isDone(id) : false;
+      const title = buildTitle(subject);
+
+      return `
+        <article class="hw-card ${done ? "done" : ""}" data-id="${id}">
+          <div class="hw-top">
+            <div>
+              <p class="hw-title">${escapeHtml(title)}</p>
+              <p class="hw-date">${escapeHtml(dateISO)}</p>
+            </div>
+            <div class="hw-actions">
+              ${enableDone ? `<label class="checkwrap" title="Сделано">
+                <input type="checkbox" class="doneCheck" data-id="${id}" ${done ? "checked" : ""} />
+              </label>` : ``}
+              <button class="iconbtn" data-copy="${id}" title="Скопировать">📋</button>
+            </div>
+          </div>
+          <p class="hw-text">${escapeHtml(body)}</p>
+        </article>
+      `;
+    }
+
     function renderCards(listEl, dateISO, items){
       listEl.innerHTML = "";
-
       if (!items || !items.length){
         listEl.innerHTML = `<div class="skeleton">На <b>${escapeHtml(dateISO)}</b> пока нет домашки.</div>`;
         return 0;
       }
-
-      const showEmoji = isEmojiOn();
-
-      const cards = items.map((line) => {
-        const { subject, body } = extractSubjectAndBody(line);
-        const em = emojiForSubject(subject);
-        const title = showEmoji ? `${em} ${subject}` : `${subject}`;
-
-        return `
-          <article class="hw-card">
-            <div class="hw-top">
-              <div>
-                <p class="hw-title">${escapeHtml(title)}</p>
-                <p class="hw-date">${escapeHtml(dateISO)}</p>
-              </div>
-              <span class="badge">${escapeHtml(subject)}</span>
-            </div>
-            <p class="hw-text">${escapeHtml(body)}</p>
-          </article>
-        `;
-      }).join("");
-
-      listEl.innerHTML = cards;
+      listEl.innerHTML = items.map(line => cardHtml(dateISO, line)).join("");
       return items.length;
     }
 
@@ -1268,45 +1747,25 @@
         listEl.innerHTML = `<div class="skeleton">Пока нет ни одной записи ДЗ в диапазоне.</div>`;
         return 0;
       }
-
-      const showEmoji = isEmojiOn();
-
       let total = 0;
+
       const html = dates.map((d) => {
         const items = byDay[d] || [];
-        total += Array.isArray(items) ? items.length : 0;
+        const arr = Array.isArray(items) ? items : [];
+        total += arr.length;
 
-        const inner = (Array.isArray(items) && items.length)
-          ? items.map((line) => {
-              const { subject, body } = extractSubjectAndBody(line);
-              const em = emojiForSubject(subject);
-              const title = showEmoji ? `${em} ${subject}` : `${subject}`;
-
-              return `
-                <article class="hw-card" style="margin-top:10px;">
-                  <div class="hw-top">
-                    <div>
-                      <p class="hw-title">${escapeHtml(title)}</p>
-                      <p class="hw-date">${escapeHtml(d)}</p>
-                    </div>
-                    <span class="badge">${escapeHtml(subject)}</span>
-                  </div>
-                  <p class="hw-text">${escapeHtml(body)}</p>
-                </article>
-              `;
-            }).join("")
-          : `<div class="skeleton">На этот день записей нет.</div>`;
+        const inner = arr.length
+          ? arr.map(line => `<div style="margin-top:10px;">${cardHtml(d, line)}</div>`).join("")
+          : `<div class="skeleton" style="margin-top:10px;">На этот день записей нет.</div>`;
 
         return `
-          <section id="day-${escapeHtml(d)}" style="margin-top:12px;">
+          <section style="margin-top:12px;" data-day="${d}" id="day-${d}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
               <div style="display:flex;flex-direction:column;">
-                <div style="font-weight:700; font-size:14px; letter-spacing:-.2px;">${escapeHtml(d)}</div>
-                <div style="font-size:12px;color:var(--muted); margin-top:2px;">${escapeHtml(prettyDateLabel(d))}</div>
+                <div style="font-weight:900; font-size:calc(14px * var(--scale)); letter-spacing:-.2px;">${escapeHtml(d)}</div>
+                <div style="font-size:calc(12px * var(--scale));color:var(--muted); margin-top:2px;">${escapeHtml(prettyDateLabel(d))}</div>
               </div>
-              <span class="badge ${Array.isArray(items)&&items.length ? "warn" : ""}">
-                ${(Array.isArray(items)?items.length:0)}
-              </span>
+              <span class="badge ${arr.length ? "warn" : ""}">${arr.length}</span>
             </div>
             ${inner}
           </section>
@@ -1317,14 +1776,13 @@
       return total;
     }
 
-    // ================= TABS + PAGES =================
+    // ================= TABS + PAGES (scroll sync) =================
     const pagesEl = document.getElementById("pages");
     const tabBtns = Array.from(document.querySelectorAll(".tab"));
 
     function setActiveTab(i){
       tabBtns.forEach(b => b.dataset.active = (Number(b.dataset.index) === i) ? "true" : "false");
     }
-
     function scrollToPage(i){
       const w = pagesEl.clientWidth;
       pagesEl.scrollTo({ left: i * w, behavior: "smooth" });
@@ -1354,43 +1812,16 @@
       }, 80);
     });
 
-    // ================= DATA LOADING =================
-    const now = new Date();
-    const todayISO = toISODate(now);
-    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    const tomorrowISO = toISODate(tomorrow);
-
-    document.getElementById("todayChip").textContent = "📅 " + formatRu(now);
-    document.getElementById("tomorrowNote").textContent = prettyDateLabel(tomorrowISO);
-    document.getElementById("todayNote").textContent = prettyDateLabel(todayISO);
-
-    const pickDateEl = document.getElementById("pickDate");
-    const sDateEl = document.getElementById("sDate");
-    pickDateEl.value = todayISO;
-    sDateEl.value = todayISO;
-
-    let cacheByDay = null;
-    let cacheDaysAhead = null;
-    let allLoadedOnce = false;
-
-    async function ensureCache(daysAhead){
-      if (cacheByDay && cacheDaysAhead === daysAhead) return cacheByDay;
-      const data = await apiHomeworkRange(daysAhead);
-      const byDay = normalizeByDay(data);
-      cacheByDay = byDay;
-      cacheDaysAhead = daysAhead;
-      return byDay;
-    }
-
+    // ================= LOADERS =================
     async function loadToday(){
       const todayList = document.getElementById("todayList");
       todayList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
         const byDay = await ensureCache(0);
-        const cToday = renderCards(todayList, todayISO, byDay[todayISO] || []);
-        document.getElementById("todayCount").textContent = String(cToday);
+        const c = renderCards(todayList, todayISO, byDay[todayISO] || []);
+        document.getElementById("todayCount").textContent = String(c);
       }catch(e){
-        const msg = (e && e.message) ? e.message : String(e);
+        const msg = e?.message ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         todayList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("todayCount").textContent = "0";
@@ -1402,10 +1833,10 @@
       tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
       try{
         const byDay = await ensureCache(1);
-        const cTom = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
-        document.getElementById("tomorrowCount").textContent = String(cTom);
+        const c = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
+        document.getElementById("tomorrowCount").textContent = String(c);
       }catch(e){
-        const msg = (e && e.message) ? e.message : String(e);
+        const msg = e?.message ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("tomorrowCount").textContent = "0";
@@ -1419,9 +1850,9 @@
         const byDay = await ensureCache(60);
         const total = renderGroupedAll(allList, byDay);
         document.getElementById("allCount").textContent = String(total);
-        allLoadedOnce = true;
+        filterAll(document.getElementById("allSearch").value || "");
       }catch(e){
-        const msg = (e && e.message) ? e.message : String(e);
+        const msg = e?.message ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
         allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("allCount").textContent = "—";
@@ -1438,46 +1869,157 @@
         const cnt = renderCards(pickList, dateISO, items);
         document.getElementById("pickCount").textContent = String(cnt);
       }catch(e){
-        const msg = (e && e.message) ? e.message : String(e);
+        const msg = e?.message ? e.message : String(e);
         const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка: " + msg);
         pickList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
         document.getElementById("pickCount").textContent = "—";
       }
     }
 
-    // Buttons (Pick)
+    // pick buttons
     document.getElementById("pickLoad").addEventListener("click", () => loadPick(pickDateEl.value));
     document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
-    // Buttons (All) FIXED: реально скроллим к секции
-    document.getElementById("reloadAll").addEventListener("click", async () => {
+    // all buttons
+    document.getElementById("reloadAll").addEventListener("click", () => loadAll());
+
+    function jumpToDateInAll(dateISO){
+      const el = document.getElementById("day-" + dateISO);
+      if (el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+      else toast("День не найден в списке");
+    }
+    document.getElementById("jumpToday").addEventListener("click", async () => {
       await loadAll();
-      toast("Обновлено");
+      jumpToDateInAll(todayISO);
+    });
+    document.getElementById("jumpTomorrow").addEventListener("click", async () => {
+      await loadAll();
+      jumpToDateInAll(tomorrowISO);
     });
 
-    async function scrollAllToDay(dayISO){
-      // если не загружено — загрузим
-      if (!allLoadedOnce) await loadAll();
-      scrollToPage(2);
-      setTimeout(() => {
-        const el = document.getElementById("day-" + dayISO);
-        if (el) el.scrollIntoView({ behavior:"smooth", block:"start" });
-        else toast("На эту дату нет секции");
-      }, 250);
+    // ================= SEARCH (ALL) =================
+    function filterAll(q){
+      const query = (q || "").trim().toLowerCase();
+      const allList = document.getElementById("allList");
+      const sections = Array.from(allList.querySelectorAll("section[data-day]"));
+
+      sections.forEach(sec => {
+        const cards = Array.from(sec.querySelectorAll(".hw-card[data-id]"));
+        let visible = 0;
+        cards.forEach(card => {
+          const id = card.getAttribute("data-id");
+          const it = hwStore[id];
+          const text = (it ? (it.subject + " " + it.body) : "").toLowerCase();
+          const ok = !query || text.includes(query);
+          card.style.display = ok ? "" : "none";
+          if (ok) visible++;
+        });
+        sec.style.display = (visible > 0 || !query) ? "" : "none";
+      });
     }
 
-    document.getElementById("jumpToday").addEventListener("click", () => scrollAllToDay(todayISO));
-    document.getElementById("jumpTomorrow").addEventListener("click", () => scrollAllToDay(tomorrowISO));
+    document.getElementById("allSearch").addEventListener("input", (e) => filterAll(e.target.value));
+    document.getElementById("allSearchClear").addEventListener("click", () => {
+      const inp = document.getElementById("allSearch");
+      inp.value = "";
+      filterAll("");
+      inp.focus();
+    });
 
-    // Suggest: sendData to bot
-    document.getElementById("sendSuggest").addEventListener("click", () => {
+    // ================= CARD ACTIONS (DONE + COPY) =================
+    document.addEventListener("change", (e) => {
+      const cb = e.target.closest(".doneCheck");
+      if (!cb) return;
+      const id = cb.dataset.id;
+      setDone(id, cb.checked);
+      const card = document.querySelector(`.hw-card[data-id="${id}"]`);
+      if (card){
+        if (cb.checked) card.classList.add("done");
+        else card.classList.remove("done");
+      }
+      toast(cb.checked ? "Отмечено сделанным" : "Снято");
+    });
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-copy]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-copy");
+      const it = hwStore[id];
+      if (!it) return;
+
+      const showEmoji = getShowEmoji();
+      const title = showEmoji ? (emojiForSubject(it.subject) + " " + it.subject) : it.subject;
+      const text = `${it.date}\n${title} — ${it.body}`;
+
+      const ok = await copyToClipboard(text);
+      toast(ok ? "Скопировано 📋" : "Не получилось скопировать");
+    });
+
+    function rerenderAllVisible(){
+      // Просто перезагружаем текущие списки (в памяти/кэше всё уже есть)
+      loadToday();
+      loadTomorrow();
+      // all — только если уже открыт/загружен
+      const allList = document.getElementById("allList");
+      if (allList && allList.querySelector("section[data-day]")) loadAll();
+      // pick — оставляем как есть
+    }
+
+    // ================= CLEAR CACHE =================
+    document.getElementById("clearCacheBtn").addEventListener("click", () => {
+      const needConfirm = getConfirmClear();
+      if (needConfirm){
+        const ok = confirm("Очистить кэш? Данные подтянутся заново при следующем открытии.");
+        if (!ok) return;
+      }
+      clearHwCache();
+      cacheByDayMem = null;
+      cacheDaysAheadMem = null;
+      toast("Кэш очищен");
+    });
+
+    // ================= REPORT =================
+    document.getElementById("copyReport").addEventListener("click", async () => {
+      const t = (document.getElementById("repText").value || "").trim();
+      if (!t) return toast("Напиши текст");
+      const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
+      toast(ok ? "Скопировано" : "Не скопировалось");
+    });
+
+    document.getElementById("sendReport").addEventListener("click", async () => {
+      const t = (document.getElementById("repText").value || "").trim();
+      if (!t) return toast("Напиши текст");
+
       const payload = {
+        action: "report_bug",
+        text: t,
+        page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
+      };
+
+      if (tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
+        toast("Отправлено");
+        document.getElementById("repText").value = "";
+        closeOverlay(reportOverlay);
+      }else{
+        const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
+        toast(ok ? "Скопировано (вне Telegram)" : "Вне Telegram");
+      }
+    });
+
+    // ================= SUGGEST =================
+    function buildSuggestPayload(){
+      return {
         action: "suggest_hw",
         date: document.getElementById("sDate").value || todayISO,
         subject: (document.getElementById("sSubject").value || "").trim(),
         text: (document.getElementById("sText").value || "").trim()
       };
+    }
+
+    document.getElementById("sendSuggest").addEventListener("click", () => {
+      const payload = buildSuggestPayload();
 
       if (!payload.subject || !payload.text){
         toast("Заполни предмет и текст");
@@ -1487,11 +2029,20 @@
       if (tg && tg.sendData){
         tg.sendData(JSON.stringify(payload));
         toast("Отправлено в бота");
-        try { tg.HapticFeedback?.notificationOccurred?.("success"); } catch(e){}
       }else{
-        console.log("Suggest payload:", payload);
-        toast("Открыто вне Telegram");
+        toast("Это работает только внутри Telegram");
       }
+    });
+
+    document.getElementById("copySuggest").addEventListener("click", async () => {
+      const payload = buildSuggestPayload();
+      if (!payload.subject || !payload.text){
+        toast("Заполни предмет и текст");
+        return;
+      }
+      const text = `📩 Предложение ДЗ\n📅 ${payload.date}\n📚 ${payload.subject}\n\n${payload.text}`;
+      const ok = await copyToClipboard(text);
+      toast(ok ? "Скопировано" : "Не скопировалось");
     });
 
     document.getElementById("clearSuggest").addEventListener("click", () => {
@@ -1500,119 +2051,13 @@
       toast("Очищено");
     });
 
-    // ================= SETTINGS UI =================
-    const settingsOverlay = document.getElementById("settingsOverlay");
-    const settingsBody = document.getElementById("settingsBody");
-    const settingsLoader = document.getElementById("settingsLoader");
-
-    function markSegButtons(containerId, predicate){
-      const el = document.getElementById(containerId);
-      if (!el) return;
-      Array.from(el.querySelectorAll("button")).forEach(b => {
-        b.dataset.on = predicate(b) ? "true" : "false";
-      });
-    }
-
-    function syncSettingsUI(){
-      const preset = getLS(THEME_PRESET_KEY, "standard");
-      const mode = getLS(THEME_MODE_KEY, "light");
-      const logo = getLS(LOGO_KEY, "dz");
-      const emoji = getLS(EMOJI_KEY, "on");
-      const auto = getLS(AUTOREFRESH_KEY, "on");
-
-      markSegButtons("presetSeg", b => b.dataset.preset === preset);
-      markSegButtons("modeSeg", b => b.dataset.mode === mode);
-      markSegButtons("logoSeg", b => b.dataset.logo === logo);
-      markSegButtons("emojiSeg", b => b.dataset.emoji === emoji);
-      markSegButtons("autorefreshSeg", b => b.dataset.auto === auto);
-    }
-
-    function openSettings(){
-      settingsOverlay.classList.add("show");
-      settingsBody.style.display = "none";
-      settingsLoader.style.display = "grid";
-      syncSettingsUI();
-
-      // 3 секунды "загрузка настроек" как ты просил
-      const phrases = ["Загрузка настроек…", "Применяем тему…", "Подготавливаем интерфейс…"];
-      let i = 0;
-      const sub = document.getElementById("settingsLoaderSub");
-      const timer = setInterval(() => {
-        sub.textContent = phrases[i % phrases.length];
-        i++;
-      }, 700);
-
-      setTimeout(() => {
-        clearInterval(timer);
-        settingsLoader.style.display = "none";
-        settingsBody.style.display = "grid";
-        syncSettingsUI();
-      }, 3000);
-    }
-
-    function closeSettings(){
-      settingsOverlay.classList.remove("show");
-    }
-
-    document.getElementById("openSettings").addEventListener("click", openSettings);
-    document.getElementById("settingsClose").addEventListener("click", closeSettings);
-    settingsOverlay.addEventListener("click", (e) => {
-      if (e.target === settingsOverlay) closeSettings();
+    document.getElementById("openBot").addEventListener("click", () => {
+      const url = "https://t.me/Temo4ka4bot";
+      if (tg?.openTelegramLink) tg.openTelegramLink(url);
+      else window.open(url, "_blank");
     });
 
-    document.getElementById("presetSeg").addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      const p = b.dataset.preset;
-      applyPreset(p);
-      syncSettingsUI();
-      toast("Тема: " + (p==="purple"?"фиолетовая":(p==="mint"?"мятная":"стандартная")));
-    });
-
-    document.getElementById("modeSeg").addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      const m = b.dataset.mode;
-      applyMode(m);
-      syncSettingsUI();
-      toast(m==="dark" ? "Тёмный режим" : "Светлый режим");
-    });
-
-    document.getElementById("logoSeg").addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      const l = b.dataset.logo;
-      applyLogo(l);
-      syncSettingsUI();
-      toast("Логотип обновлён");
-    });
-
-    document.getElementById("emojiSeg").addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      const v = b.dataset.emoji;
-      setEmoji(v === "on");
-      syncSettingsUI();
-      toast(v==="on" ? "Эмодзи включены" : "Эмодзи скрыты");
-    });
-
-    document.getElementById("autorefreshSeg").addEventListener("click", (e) => {
-      const b = e.target.closest("button");
-      if (!b) return;
-      const v = b.dataset.auto;
-      setAutoRefresh(v === "on");
-      syncSettingsUI();
-      toast(v==="on" ? "Автообновление включено" : "Автообновление выключено");
-    });
-
-    document.getElementById("clearCacheBtn").addEventListener("click", () => {
-      cacheByDay = null;
-      cacheDaysAhead = null;
-      allLoadedOnce = false;
-      toast("Кэш очищен");
-    });
-
-    // ================= SPLASH: min 3 sec + rotating text + tip =================
+    // ================= INIT SPLASH =================
     function hideSplash(){
       const splash = document.getElementById("splash");
       if (!splash) return;
@@ -1620,59 +2065,23 @@
       setTimeout(() => splash.remove(), 350);
     }
 
-    const splashPhrases = [
-      "Загружаем домашку…",
-      "Проверяем обновления…",
-      "Подключаемся к классу…",
-    ];
-    const tips = [
-      "Совет: свайпай вкладки вправо/влево.",
-      "Совет: в “Всё ДЗ” можно прыгнуть к сегодня/завтра.",
-      "Совет: в настройках можно скрыть эмодзи предметов.",
-      "Совет: если данные странные — нажми “Очистить кэш”.",
-    ];
-
-    function setRandomTip(){
-      const el = document.getElementById("splashTip");
-      el.textContent = tips[Math.floor(Math.random()*tips.length)];
-    }
-
-    // Init
+    // ================= INIT =================
     (async () => {
       if (tg){
         try{ tg.ready(); tg.expand(); }catch(e){}
       }
 
-      const splashSub = document.getElementById("splashSub");
-      setRandomTip();
-      let k = 0;
-      const rotate = setInterval(() => {
-        splashSub.textContent = splashPhrases[k % splashPhrases.length];
-        k++;
-      }, 700);
-
       const t0 = Date.now();
       const MIN_MS = 3000;
 
-      // автообновление: если выкл — не сбрасываем кэш (но кэша на старте ещё нет)
-      // если вкл — явно сбросим на всякий
-      if (isAutoRefreshOn()){
-        cacheByDay = null;
-        cacheDaysAhead = null;
-      }
-
-      // Start on "today" tab
+      // стартуем с "На сегодня"
       await loadToday();
       await loadTomorrow();
       await loadPick(todayISO);
 
       const spent = Date.now() - t0;
       const left = Math.max(0, MIN_MS - spent);
-
-      setTimeout(() => {
-        clearInterval(rotate);
-        hideSplash();
-      }, left);
+      setTimeout(hideSplash, left);
     })();
   </script>
 </body>
