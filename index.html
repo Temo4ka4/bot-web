@@ -1843,6 +1843,36 @@
       }
     }
 
+  async function apiProposeHW({ day, subject, text }){
+    const initData = getInitData();
+    if (!initData) throw new Error("no_initData");
+
+    return await fetchMaybeJson(API_BASE + "/api/propose_hw", {
+     method: "POST",
+     headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "x-telegram-initdata": initData
+    },
+    body: JSON.stringify({ day, subject, text })
+  });
+}
+
+async function apiReportIssue({ title, details, page }){
+  const initData = getInitData();
+  if (!initData) throw new Error("no_initData");
+
+  return await fetchMaybeJson(API_BASE + "/api/report_issue", {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "x-telegram-initdata": initData
+    },
+    body: JSON.stringify({ title, details, page })
+  });
+}
+
     async function loadAll(){
       const allList = document.getElementById("allList");
       allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
