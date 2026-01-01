@@ -803,7 +803,7 @@ body::before{
   position:fixed;
   inset:-20px;
   pointer-events:none;
-  z-index: 0;
+  .app{ position: relative; z-index: 1; }
   opacity: .55;
   background-image:
     radial-gradient(circle at 12% 18%, var(--snow1) 0 1.6px, transparent 2.2px),
@@ -1495,19 +1495,42 @@ body::before{
     }
 
     function normalizeByDay(apiData){
-      if (!apiData) return {};
-      if (typeof apiData === "string"){
-        const now = new Date();
-        const todayISO = toISODate(now);
-        return { [todayISO]: [apiData] };
+  if (!apiData) return {};
+
+  // если вдруг сервер вернул просто строку
+  if (typeof apiData === "string"){
+    const now = new Date();
+    const todayISO = toISODate(now);
+    return { [todayISO]: [apiData] };
+  }
+
+  if (typeof apiData !== "object") return {};
+
+  // нормальный кейс: by_day уже мапа
+  if (apiData.by_day && typeof apiData.by_day === "object" && !Array.isArray(apiData.by_day)){
+    return apiData.by_day;
+  }
+
+  // кейс: days приходит массивом [{day, items}]
+  if (Array.isArray(apiData.days)){
+    const m = {};
+    for (const row of apiData.days){
+      const d = row?.day;
+      const items = row?.items;
+      if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)){
+        m[d] = Array.isArray(items) ? items : [];
       }
-      if (typeof apiData !== "object") return {};
-      if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
-      if (apiData.days && typeof apiData.days === "object") return apiData.days;
-      const keys = Object.keys(apiData);
-      if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
-      return {};
     }
+    return m;
+  }
+
+  // кейс: сервер вернул сразу объект с ключами-датами
+  const keys = Object.keys(apiData);
+  if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
+
+  return {};
+}
+
 
     // ================= SUBJECT EMOJI =================
     const SUBJECT_EMOJI = [
