@@ -1,0 +1,2375 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>ДЗ • WebApp</title>
+
+  <style>
+    :root{
+      --bg: #f4f5f7;
+      --surface: rgba(255,255,255,.75);
+      --surface-strong: #ffffff;
+      --text: #0f172a;
+      --muted: rgba(15, 23, 42, .62);
+      --line: rgba(15, 23, 42, .10);
+      --shadow: 0 18px 50px rgba(0,0,0,.10);
+      --shadow-soft: 0 10px 30px rgba(0,0,0,.08);
+
+      --accent: #007aff;
+      --accent-2: #5ac8fa;
+
+      --good: #34c759;
+      --warn: #ff9500;
+      --bad: #ff3b30;
+
+      --radius: 18px;
+      --radius2: 24px;
+
+      --tap: rgba(0, 122, 255, .12);
+      --chip: rgba(0,0,0,.06);
+      --chip2: rgba(0,0,0,.10);
+
+      --sidebar-w: 320px;
+      --max-w: 1200px;
+
+      --safe-top: env(safe-area-inset-top);
+      --safe-bot: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
+      --safe-right: env(safe-area-inset-right);
+
+      --scale: 1;
+    }
+
+    html[data-accent="purple"]{
+      --accent: #8b5cf6;
+      --accent-2: #a78bfa;
+      --tap: rgba(139, 92, 246, .16);
+    }
+    html[data-accent="mint"]{
+      --accent: #14b8a6;
+      --accent-2: #2dd4bf;
+      --tap: rgba(20, 184, 166, .16);
+    }
+
+    html[data-theme="dark"]{
+      --bg: #0b1020;
+      --surface: rgba(18, 24, 42, .65);
+      --surface-strong: #12182a;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --line: rgba(255,255,255,.10);
+      --shadow: 0 18px 55px rgba(0,0,0,.55);
+      --shadow-soft: 0 10px 30px rgba(0,0,0,.40);
+
+      --chip: rgba(255,255,255,.08);
+      --chip2: rgba(255,255,255,.12);
+    }
+
+    html[data-text="s"]{ --scale: .94; }
+    html[data-text="m"]{ --scale: 1.00; }
+    html[data-text="l"]{ --scale: 1.10; }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(900px 450px at 15% 10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+        radial-gradient(700px 380px at 85% 20%, color-mix(in srgb, var(--accent-2) 26%, transparent), transparent 55%),
+        radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100svh;
+      padding: calc(16px + var(--safe-top)) calc(16px + var(--safe-right)) calc(16px + var(--safe-bot)) calc(16px + var(--safe-left));
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+
+      font-size: calc(14px * var(--scale));
+    }
+
+    body.modal-open{
+      height: 100svh;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .app{
+      max-width: var(--max-w);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      border: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-radius: var(--radius2);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .sidebar{
+      position: sticky;
+      top: calc(16px + var(--safe-top));
+      padding: 18px;
+    }
+    @media (max-width: 980px){
+      .sidebar{ position: relative; top: 0; }
+    }
+
+    .brand{
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+
+    .logo{
+      width: 42px; height: 42px;
+      border-radius: 14px;
+      background:
+        radial-gradient(12px 12px at 25% 35%, rgba(255,255,255,.9), rgba(255,255,255,0) 55%),
+        linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 25px color-mix(in srgb, var(--accent) 22%, transparent);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      user-select: none;
+    }
+
+    .brand h1{
+      font-size: calc(16px * var(--scale));
+      margin: 0;
+      line-height: 1.2;
+      letter-spacing: -0.2px;
+    }
+    .brand p{
+      margin: 4px 0 0 0;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+    }
+
+    .section-title{
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      margin: 14px 2px 10px;
+    }
+
+    .pill{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+    }
+
+    .pill-btn{
+      width: 100%;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 12px 12px;
+      text-align: left;
+      color: var(--text);
+    }
+    .pill-btn:active{ background: var(--tap); }
+
+    .pill .left{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .icon{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      display: grid;
+      place-items: center;
+      font-size: calc(16px * var(--scale));
+      user-select: none;
+    }
+
+    .pill .meta{ min-width: 0; }
+    .pill .meta .t{
+      font-size: calc(13px * var(--scale));
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pill .meta .s{
+      font-size: calc(12px * var(--scale));
+      margin: 2px 0 0 0;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hint{
+      margin: 12px 2px 0;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .main{ padding: 14px; }
+
+    .topbar{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 6px 6px 12px;
+    }
+    .topbar .title{ display: flex; flex-direction: column; gap: 2px; }
+    .topbar h2{
+      margin: 0;
+      font-size: calc(18px * var(--scale));
+      letter-spacing: -0.3px;
+      line-height: 1.2;
+    }
+    .topbar .sub{
+      margin: 0;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+    }
+
+    .chip{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .tabs{
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+    }
+    .tabs::-webkit-scrollbar{ display: none; }
+    .tab{
+      scroll-snap-align: start;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: calc(13px * var(--scale));
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: .15s ease;
+      user-select: none;
+    }
+    .tab:active{ background: var(--tap); }
+    .tab[data-active="true"]{
+      background: var(--surface-strong);
+      border-color: var(--line);
+      color: var(--text);
+      box-shadow: 0 10px 20px rgba(0,0,0,.06);
+    }
+
+    .pages{
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      border-radius: var(--radius2);
+    }
+    .pages::-webkit-scrollbar{ display: none; }
+
+    .page{
+      scroll-snap-align: start;
+      flex: 0 0 100%;
+      min-width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: var(--radius2);
+      padding: 14px;
+    }
+
+    .page-head{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .page-head h3{
+      margin: 0;
+      font-size: calc(15px * var(--scale));
+      letter-spacing: -0.2px;
+    }
+    .page-head .note{
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .skeleton{
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: calc(13px * var(--scale));
+      line-height: 1.5;
+      background: rgba(255,255,255,.04);
+    }
+
+    .hw-list{
+      display: grid;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .hw-card{
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      box-shadow: 0 12px 28px rgba(0,0,0,.06);
+      padding: 12px 12px;
+      position: relative;
+    }
+    .hw-card.done{
+      opacity: .72;
+    }
+    .hw-card.done .hw-title{
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+      text-decoration-color: color-mix(in srgb, var(--muted) 70%, transparent);
+    }
+
+    .hw-top{
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .hw-title{
+      margin: 0;
+      font-size: calc(14px * var(--scale));
+      letter-spacing: -0.2px;
+      line-height: 1.25;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .hw-date{
+      margin: 2px 0 0 0;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+    }
+    .hw-text{
+      margin: 10px 0 0;
+      font-size: calc(13px * var(--scale));
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .badge{
+      flex: 0 0 auto;
+      font-size: calc(12px * var(--scale));
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      user-select: none;
+      white-space: nowrap;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badge.good{ color: var(--good); border-color: rgba(52,199,89,.35); background: rgba(52,199,89,.10); }
+    .badge.warn{ color: var(--warn); border-color: rgba(255,149,0,.35); background: rgba(255,149,0,.10); }
+
+    .hw-actions{
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .iconbtn{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      font-size: calc(15px * var(--scale));
+    }
+    .iconbtn:active{ background: var(--tap); transform: translateY(1px); }
+
+    .checkwrap{
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .checkwrap input{
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .row{
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      margin-top: 10px;
+    }
+    @media (max-width: 560px){
+      .row{ grid-template-columns: 1fr; }
+    }
+
+    .field{ display: grid; gap: 6px; }
+    label{
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+    }
+    input[type="date"], input[type="text"], textarea, input[type="search"]{
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      padding: 12px 12px;
+      color: var(--text);
+      outline: none;
+      font-size: calc(14px * var(--scale));
+    }
+    textarea{
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.4;
+    }
+
+    .btns{
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .btn{
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 11px 12px;
+      font-size: calc(13px * var(--scale));
+      cursor: pointer;
+      user-select: none;
+      transition: .15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn.primary{
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+      color: var(--text);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-bot));
+      transform: translateX(-50%);
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.78);
+      color: #fff;
+      font-size: calc(12px * var(--scale));
+      opacity: 0;
+      pointer-events: none;
+      transition: .18s ease;
+      max-width: calc(100vw - 26px);
+      text-align: center;
+      z-index: 140;
+    }
+    html[data-theme="dark"] .toast{
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .toast.show{ opacity: 1; }
+
+    .small{
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 10px 0 0;
+    }
+
+    /* ===== Splash loader ===== */
+    .splash{
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(900px 450px at 15% 10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 55%),
+        radial-gradient(700px 380px at 85% 20%, color-mix(in srgb, var(--accent-2) 26%, transparent), transparent 55%),
+        radial-gradient(900px 540px at 60% 90%, rgba(52,199,89,.10), transparent 60%),
+        var(--bg);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .splash.hide{
+      opacity: 0;
+      transform: scale(1.01);
+      pointer-events: none;
+    }
+    .splash-card{
+      width: min(360px, calc(100vw - 36px));
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      text-align: center;
+    }
+    .spinner{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 3px solid rgba(0,0,0,.10);
+      border-top-color: color-mix(in srgb, var(--accent) 85%, transparent);
+      animation: spin .85s linear infinite;
+    }
+    html[data-theme="dark"] .spinner{
+      border-color: rgba(255,255,255,.14);
+      border-top-color: color-mix(in srgb, var(--accent-2) 95%, transparent);
+    }
+    @keyframes spin{ to { transform: rotate(360deg); } }
+    .splash-title{
+      font-weight: 900;
+      letter-spacing: -0.2px;
+      font-size: calc(15px * var(--scale));
+    }
+    .splash-sub{
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+    }
+    .progress{
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.08);
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+    html[data-theme="dark"] .progress{ background: rgba(255,255,255,.08); }
+    .progress .bar{
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: 999px;
+      animation: indet 1.05s ease-in-out infinite;
+    }
+    @keyframes indet{
+      0%{ transform: translateX(-120%); }
+      100%{ transform: translateX(320%); }
+    }
+    .tip{
+      margin-top: -4px;
+      font-size: calc(12px * var(--scale));
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* ===== Overlay sheets ===== */
+    .overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 160;
+      display: none;
+      background: rgba(0,0,0,.36);
+      padding: calc(12px + var(--safe-top)) calc(12px + var(--safe-right)) calc(12px + var(--safe-bot)) calc(12px + var(--safe-left));
+    }
+    .overlay.show{
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .sheet{
+      width: min(560px, 100%);
+      max-height: calc(100svh - 24px - var(--safe-top) - var(--safe-bot));
+      border-radius: 26px;
+      border: 1px solid var(--line);
+      background: var(--surface-strong);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+    .sheet-head{
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .sheet-title{
+      font-weight: 900;
+      letter-spacing: -.2px;
+      font-size: calc(14px * var(--scale));
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sheet-body{
+      padding: 12px;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      touch-action: pan-y;
+    }
+
+    .setting{
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,.04);
+      margin-bottom: 10px;
+    }
+    .setting-top{
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+    .setting-name{
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -.2px;
+      font-size: calc(13px * var(--scale));
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .setting-desc{
+      margin: 4px 0 0 0;
+      color: var(--muted);
+      font-size: calc(12px * var(--scale));
+      line-height: 1.35;
+    }
+
+    .seg{
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .seg button{
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: calc(12px * var(--scale));
+      cursor: pointer;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .seg button:active{ background: var(--tap); }
+    .seg button[data-on="true"]{
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+      background: color-mix(in srgb, var(--accent) 14%, transparent);
+    }
+
+    .searchbar{
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 10px 12px;
+      margin-top: 8px;
+    }
+    .searchbar .sicon{
+      font-size: calc(14px * var(--scale));
+      color: var(--muted);
+      user-select: none;
+    }
+    .searchbar input{
+      border: 0;
+      background: transparent;
+      padding: 0;
+      outline: none;
+      font-size: calc(14px * var(--scale));
+      color: var(--text);
+    }
+    .searchbar .clear{
+      margin-left: auto;
+      width: 30px;
+      height: 30px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      user-select: none;
+      font-size: calc(13px * var(--scale));
+    }
+    .searchbar .clear:active{ background: var(--tap); }
+
+    .muted-link{
+      color: var(--muted);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+  
+    /* ❄️ Зимний фон: снежинки (лёгкий вайб, без анимации) */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-20px;
+      pointer-events:none;
+      opacity:.18;
+      filter: blur(.15px);
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(255,255,255,.55) 0 1.5px, transparent 2px),
+        radial-gradient(circle at 28% 72%, rgba(255,255,255,.40) 0 1.2px, transparent 1.8px),
+        radial-gradient(circle at 70% 28%, rgba(255,255,255,.40) 0 1.4px, transparent 2px),
+        radial-gradient(circle at 84% 62%, rgba(255,255,255,.32) 0 1.1px, transparent 1.8px),
+        radial-gradient(circle at 48% 44%, rgba(255,255,255,.28) 0 1.2px, transparent 1.9px),
+        radial-gradient(circle at 6% 86%, rgba(255,255,255,.24) 0 1.0px, transparent 1.6px),
+        radial-gradient(circle at 94% 12%, rgba(255,255,255,.24) 0 1.0px, transparent 1.6px);
+      background-size: 520px 520px;
+      background-repeat: repeat;
+      transform: translateZ(0);
+    }
+
+    /* 🛠 Техработы: fullscreen-оверлей (без крестика, чтобы не абузили) */
+    .tech-overlay{
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      display: none;
+      padding: max(16px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+      background: rgba(6, 10, 20, .82);
+      backdrop-filter: blur(10px);
+    }
+    .tech-overlay.on{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tech-card{
+      width: min(720px, 100%);
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      color: #0f172a;
+      box-shadow: 0 28px 90px rgba(0,0,0,.55);
+      overflow: hidden;
+    }
+    .tech-head{
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(15,23,42,.10);
+      background: rgba(255,255,255,.70);
+    }
+    .tech-head b{ font-size: 15px; }
+    .tech-body{ padding: 14px 16px 16px; }
+    .tech-row{
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+      background: rgba(15,23,42,.06);
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .tech-ico{
+      width: 36px; height: 36px;
+      border-radius: 14px;
+      display:grid; place-items:center;
+      background: rgba(15,23,42,.06);
+      border: 1px solid rgba(15,23,42,.10);
+      flex:0 0 auto;
+    }
+    .tech-row b{ display:block; margin-bottom: 4px; }
+    .tech-row p{ margin:0; color: rgba(15,23,42,.72); font-size: 13px; line-height: 1.35; }
+    .tech-actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .tech-btn{
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: rgba(255,255,255,.85);
+      color:#0f172a;
+      cursor:pointer;
+      font-weight: 600;
+    }
+    .tech-btn.primary{
+      background: rgba(96,165,250,.20);
+      border-color: rgba(96,165,250,.55);
+    }
+    .tech-btn.danger{
+      background: rgba(239,68,68,.14);
+      border-color: rgba(239,68,68,.45);
+    }
+    .tech-note{
+      margin-top: 10px;
+      color: rgba(15,23,42,.62);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    /* ⚙️ Логотипы-картинки в настройках */
+    #logoSeg button{
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      padding: 0;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.08);
+    }
+    #logoSeg button img{
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display:block;
+    }
+    /* Режим "картинка" для .logo */
+    .logo.is-img{
+      background: none !important;
+      overflow: hidden;
+      padding: 0 !important;
+    }
+    .logo.is-img img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
+      display:block;
+      border-radius: inherit;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- 🛠 Fullscreen техработы (без крестика) -->
+  <div class="tech-overlay" id="techOverlay" aria-hidden="true">
+    <div class="tech-card" role="dialog" aria-modal="true">
+      <div class="tech-head">
+        <b id="techTitle">Технические работы</b>
+      </div>
+      <div class="tech-body">
+        <div class="tech-row">
+          <div class="tech-ico">🛠</div>
+          <div>
+            <b id="techHead">Сервисы обновляются</b>
+            <p id="techMsg">Сейчас мы обновляем сервисы. Домашка временно недоступна. Попробуй ещё раз чуть позже.</p>
+          </div>
+        </div>
+
+        <div class="tech-actions">
+          <button class="tech-btn primary" id="techRetry">Попробовать снова</button>
+          <button class="tech-btn danger" id="techExit">Выйти</button>
+          <button class="tech-btn" id="techDev">Написать разработчику</button>
+        </div>
+
+        <div class="tech-note">Если проблема не уходит — техработы ещё идут. Просто зайди позже.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Splash (min 3 sec) -->
+  <div class="splash" id="splash">
+    <div class="splash-card">
+      <div class="logo" id="splashLogo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
+      <div class="spinner" aria-label="Загрузка"></div>
+      <div class="splash-title" id="splashTitle">Домашнее задание</div>
+      <p class="splash-sub" id="splashSub">Загружаем домашку…</p>
+      <div class="progress" aria-hidden="true"><div class="bar"></div></div>
+      <div class="tip" id="splashTip">Совет: нажми 📋, чтобы скопировать ДЗ.</div>
+    </div>
+  </div>
+
+  <!-- Mini splash for settings -->
+  <div class="splash" id="miniSplash" style="display:none;">
+    <div class="splash-card">
+      <div class="logo" id="miniLogo" style="width:56px;height:56px;border-radius:18px;">DZ</div>
+      <div class="spinner" aria-label="Загрузка"></div>
+      <div class="splash-title">Настройки</div>
+      <p class="splash-sub" id="miniSub">Загружаем настройки…</p>
+      <div class="progress" aria-hidden="true"><div class="bar"></div></div>
+      <div class="tip" id="miniTip">Совет: можно скрыть эмодзи предметов.</div>
+    </div>
+  </div>
+
+  <!-- Settings overlay -->
+  <div class="overlay" id="settingsOverlay" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Настройки">
+      <div class="sheet-head">
+        <div class="sheet-title">⚙️ Настройки</div>
+        <button class="iconbtn" id="closeSettings" title="Закрыть">✕</button>
+      </div>
+      <div class="sheet-body">
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🎨 Цветовая тема</p>
+              <p class="setting-desc">Стандарт / Фиолетовая / Мятная</p>
+            </div>
+            <div class="seg" id="accentSeg">
+              <button data-accent="standard">Стандарт</button>
+              <button data-accent="purple">Фиолет</button>
+              <button data-accent="mint">Мята</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🌓 Режим</p>
+              <p class="setting-desc">Светлый / Тёмный</p>
+            </div>
+            <div class="seg" id="modeSeg">
+              <button data-mode="light">Светлый</button>
+              <button data-mode="dark">Тёмный</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🧩 Логотип в шапке</p>
+              <p class="setting-desc">DZ / Книга / Тетрадь / Школа / Сова</p>
+            </div>
+            
+            <div class="seg" id="logoSeg">
+              <button data-logo="logo1" title="Лого 1"><img src="klasik.jpg" alt="logo1"></button>
+              <button data-logo="logo2" title="Лого 2"><img src="logo2.jpg" alt="logo2"></button>
+              <button data-logo="logo3" title="Лого 3"><img src="logo3.webp" alt="logo3"></button>
+              <button data-logo="logo4" title="Лого 4"><img src="logo4.jpg" alt="logo4"></button>
+              <button data-logo="logo5" title="Лого 5"><img src="logo5.webp" alt="logo5"></button>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🙂 Эмодзи предметов</p>
+              <p class="setting-desc">Показывать/скрыть эмодзи перед названием</p>
+            </div>
+            <div class="seg" id="emojiSeg">
+              <button data-emoji="on">Показывать</button>
+              <button data-emoji="off">Скрыть</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">✅ Отметки “сделано”</p>
+              <p class="setting-desc">Галочки возле каждого ДЗ</p>
+            </div>
+            <div class="seg" id="doneSeg">
+              <button data-done="on">Вкл</button>
+              <button data-done="off">Выкл</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🔠 Размер текста</p>
+              <p class="setting-desc">Выбери удобный размер (пример “Aa”)</p>
+            </div>
+            <div class="seg" id="textSeg">
+              <button data-text="s"><span style="font-size:12px;">Aa</span> S</button>
+              <button data-text="m"><span style="font-size:14px;">Aa</span> M</button>
+              <button data-text="l"><span style="font-size:16px;">Aa</span> L</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🔄 Автообновление</p>
+              <p class="setting-desc">Обновлять данные при открытии, если кэш устарел</p>
+            </div>
+            <div class="seg" id="autoSeg">
+              <button data-auto="on">Вкл</button>
+              <button data-auto="off">Выкл</button>
+            </div>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:10px; align-items:center; justify-content:space-between;">
+            <div style="color:var(--muted); font-size:calc(12px * var(--scale));">Считать устаревшим через:</div>
+            <div class="seg" id="staleSeg">
+              <button data-stale="5">5м</button>
+              <button data-stale="15">15м</button>
+              <button data-stale="30">30м</button>
+              <button data-stale="60">60м</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🧽 Очистка кэша</p>
+              <p class="setting-desc">Если что-то сломалось — очисти кэш и перезайди</p>
+            </div>
+            <div class="seg" id="confirmSeg">
+              <button data-confirm="on">Подтверждать</button>
+              <button data-confirm="off">Без подтверждения</button>
+            </div>
+          </div>
+          <div class="btns">
+            <button class="btn" id="clearCacheBtn">🧽 Очистить кэш</button>
+          </div>
+        </div>
+
+        <div class="setting">
+          <div class="setting-top">
+            <div>
+              <p class="setting-name">🐞 Ошибка / отчёт</p>
+              <p class="setting-desc">Откроется форма и отправит сообщение через бота</p>
+            </div>
+            <div class="seg">
+              <button id="openReport">Открыть</button>
+            </div>
+          </div>
+          <p class="setting-desc" style="margin-top:8px;">
+            Если ты не в Telegram — можно просто открыть <span class="muted-link" id="openDev">@Temo4ka4</span>.
+          </p>
+        </div>
+
+        <p class="small" style="margin-top:12px;">
+          Настройки сохраняются на этом устройстве.
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Report overlay -->
+  <div class="overlay" id="reportOverlay" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-label="Отчёт об ошибке">
+      <div class="sheet-head">
+        <div class="sheet-title">🐞 Отчёт</div>
+        <button class="iconbtn" id="closeReport" title="Закрыть">✕</button>
+      </div>
+      <div class="sheet-body">
+        <div class="field">
+          <label for="repText">Опиши проблему</label>
+          <textarea id="repText" placeholder="Что произошло? В какой вкладке? Что ожидал?"></textarea>
+        </div>
+        <div class="btns">
+          <button class="btn primary" id="sendReport">📨 Отправить</button>
+          <button class="btn" id="copyReport">📋 Скопировать</button>
+        </div>
+        <p class="small">
+          Отправка работает через Telegram WebApp. Если открыть в браузере — можно скопировать текст и написать разработчику вручную.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <!-- LEFT -->
+    <aside class="card sidebar">
+      <div class="brand">
+        <div class="logo" id="appLogo">DZ</div>
+        <div>
+          <h1>Домашнее Задание • WebApp</h1>
+          <p id="who">подключение…</p>
+        </div>
+      </div>
+
+      <div class="section-title">Разделы</div>
+
+      <button class="pill-btn" id="openSettingsBtn">
+        <div class="pill" style="border:0; padding:0; background:transparent;">
+          <div class="left">
+            <div class="icon">⚙️</div>
+            <div class="meta">
+              <p class="t">Настройки</p>
+              <p class="s" id="settingsSummary">Тема • Логотип • Кэш</p>
+            </div>
+          </div>
+          <div class="icon" style="width:34px;height:34px;">›</div>
+        </div>
+      </button>
+
+      <p class="hint">
+        Здесь можно поменять тему, логотип, размер текста, включить галочки “сделано” и почистить кэш.
+      </p>
+
+      <p class="hint" id="initHint">
+        Если ты открыл это не из Telegram-кнопки — некоторые функции (например “Предложить ДЗ”) работать не будут.
+      </p>
+    </aside>
+
+    <!-- RIGHT -->
+    <main class="card main">
+      <div class="topbar">
+        <div class="title">
+          <h2>Домашнее задание</h2>
+          <p class="sub" id="subline">Листай вкладки • всё в одном месте</p>
+        </div>
+
+        <span class="chip" id="todayChip">📅 —</span>
+      </div>
+
+      <!-- Tabs order: today, tomorrow, all, pick date, suggest -->
+      <div class="tabs" id="tabs">
+        <button class="tab" data-index="0" data-active="true">📅 На сегодня</button>
+        <button class="tab" data-index="1">📆 На завтра</button>
+        <button class="tab" data-index="2">🗂 Всё ДЗ</button>
+        <button class="tab" data-index="3">🔎 ДЗ по дате</button>
+        <button class="tab" data-index="4">✉️ Предложить ДЗ</button>
+      </div>
+
+      <div class="pages" id="pages">
+        <!-- 0: today -->
+        <section class="page" data-index="0">
+          <div class="page-head">
+            <div>
+              <h3>На сегодня</h3>
+              <p class="note" id="todayNote">—</p>
+            </div>
+            <span class="badge warn" id="todayCount">0</span>
+          </div>
+          <div class="hw-list" id="todayList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 1: tomorrow -->
+        <section class="page" data-index="1">
+          <div class="page-head">
+            <div>
+              <h3>На завтра</h3>
+              <p class="note" id="tomorrowNote">—</p>
+            </div>
+            <span class="badge warn" id="tomorrowCount">0</span>
+          </div>
+          <div class="hw-list" id="tomorrowList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 2: all -->
+        <section class="page" data-index="2">
+          <div class="page-head">
+            <div>
+              <h3>Всё ДЗ</h3>
+              <p class="note">По дням • поиск • галочки</p>
+            </div>
+            <span class="badge" id="allCount">—</span>
+          </div>
+
+          <div class="searchbar">
+            <div class="sicon">🔎</div>
+            <input id="allSearch" type="search" placeholder="Поиск по предмету и тексту…" />
+            <button class="clear" id="allSearchClear" title="Очистить">✕</button>
+          </div>
+
+          <div class="btns">
+            <button class="btn primary" id="reloadAll">🔄 Обновить</button>
+            <button class="btn" id="jumpToday">📅 К сегодня</button>
+            <button class="btn" id="jumpTomorrow">📆 К завтра</button>
+          </div>
+
+          <p class="small">Нажми 📋 на карточке — скопировать. Галочки “сделано” сохраняются на устройстве.</p>
+
+          <div class="hw-list" id="allList">
+            <div class="skeleton">Загружаю…</div>
+          </div>
+        </section>
+
+        <!-- 3: pick date -->
+        <section class="page" data-index="3">
+          <div class="page-head">
+            <div>
+              <h3>ДЗ по дате</h3>
+              <p class="note">Выбирай день и смотри</p>
+            </div>
+            <span class="badge" id="pickCount">—</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="pickDate">Дата</label>
+              <input id="pickDate" type="date" />
+            </div>
+            <div class="field">
+              <label>Действия</label>
+              <div class="btns" style="margin-top: 2px;">
+                <button class="btn primary" id="pickLoad">🔍 Показать</button>
+                <button class="btn" id="pickToday">📅 Сегодня</button>
+                <button class="btn" id="pickTomorrow">📆 Завтра</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="hw-list" id="pickList" style="margin-top: 12px;">
+            <div class="skeleton">Выбери дату и нажми “Показать”.</div>
+          </div>
+        </section>
+
+        <!-- 4: suggest -->
+        <section class="page" data-index="4">
+          <div class="page-head">
+            <div>
+              <h3>Предложить ДЗ</h3>
+              <p class="note">Отправим предложением в бота</p>
+            </div>
+            <span class="badge good">✨</span>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="sDate">Дата</label>
+              <input id="sDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="sSubject">Предмет</label>
+              <input id="sSubject" type="text" placeholder="Например: Алгебра" />
+            </div>
+          </div>
+
+          <div class="field" style="margin-top: 10px;">
+            <label for="sText">Текст ДЗ</label>
+            <textarea id="sText" placeholder="Например: №123 (1-5), подготовить правило…"></textarea>
+          </div>
+
+          <div class="btns">
+            <button class="btn primary" id="sendSuggest">✉️ Отправить</button>
+            <button class="btn" id="copySuggest">📋 Скопировать</button>
+            <button class="btn" id="clearSuggest">🧽 Очистить</button>
+          </div>
+
+          <p class="small" id="suggestHint">
+            Отправка работает через Telegram WebApp. Если открыть это в браузере — нажми “Скопировать” и вставь в чат бота.
+          </p>
+
+          <div class="btns">
+            <button class="btn" id="openBot">🤖 Открыть бота</button>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">готово</div>
+
+  <script>
+    // ================= SETTINGS KEYS =================
+    const THEME_KEY = "dz_webapp_theme";             // light|dark
+    const ACCENT_KEY = "dz_webapp_accent";           // standard|purple|mint
+    const LOGO_KEY = "dz_webapp_logo";               // logo1|logo2|logo3|logo4|logo5 (или старые значения)
+    const EMOJI_KEY = "dz_webapp_emoji";             // on|off
+    const DONE_KEY = "dz_webapp_done";               // on|off
+    const TEXT_KEY = "dz_webapp_text";               // s|m|l
+    const AUTO_KEY = "dz_webapp_autorefresh";        // on|off
+    const STALE_KEY = "dz_webapp_stale_min";         // number
+    const CONFIRM_KEY = "dz_webapp_confirm_clear";   // on|off
+
+
+    /* =========================================================
+       #ВКЛ/ВЫКЛ ТЕХРАБОТ (ищи этот блок)
+       - null  => авто: по ссылке/параметру или по start_param
+       - true  => всегда показывать техработы
+       - false => никогда не показывать техработы
+       ========================================================= */
+    const FORCE_TECHWORKS = null;
+
+    // Ссылка на разработчика (кнопка "Написать разработчику")
+    const DEV_USERNAME = "Temo4ka4";
+
+    // Параметры, которые включают техработы по ссылке:
+    // ?tech=1 или ?maintenance=1 или ?mode=tech
+
+
+    const HW_CACHE_KEY = "dz_hw_cache_v2";           // { [daysAhead]: {ts, byDay} }
+    const DONE_MAP_KEY = "dz_hw_done_v2";            // { [id]: true }
+
+    // ================= SMALL UTILS =================
+    function toast(msg){
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 1300);
+    }
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function toISODate(d){
+      return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate());
+    }
+    function formatRu(d){
+      const opts = { day:"2-digit", month:"2-digit", year:"numeric" };
+      return new Intl.DateTimeFormat("ru-RU", opts).format(d);
+    }
+    function escapeHtml(s){
+      return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+    }
+    function prettyDateLabel(iso){
+      try{
+        const [y,m,d] = iso.split("-").map(Number);
+        const dt = new Date(y, m-1, d);
+        const weekday = new Intl.DateTimeFormat("ru-RU", { weekday:"long" }).format(dt);
+        const nice = formatRu(dt);
+        return `${weekday}, ${nice}`;
+      }catch(e){ return iso; }
+    }
+    function calcDaysAhead(dateStr){
+      const [y,m,d] = dateStr.split("-").map(Number);
+      const target = new Date(y, m-1, d);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return Math.floor((target - today) / 86400000);
+    }
+    async function copyToClipboard(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }catch(e){
+        try{
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = "fixed";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.focus(); ta.select();
+          const ok = document.execCommand("copy");
+          ta.remove();
+          return ok;
+        }catch(_){
+          return false;
+        }
+      }
+    }
+
+    // ================= TELEGRAM WEBAPP =================
+    const tg = window.Telegram?.WebApp || null;
+
+    function getInitData(){ return tg?.initData || ""; }
+    function getUserLabel(){
+      const u = tg?.initDataUnsafe?.user;
+      if (!u) return "Гость";
+      const name = [u.first_name, u.last_name].filter(Boolean).join(" ");
+      const uname = u.username ? ("@" + u.username) : "";
+      return (name || uname || ("id:" + u.id)).trim();
+    }
+    function setWho(){
+      const who = document.getElementById("who");
+      if (tg){
+        who.textContent = "Пользователь: " + getUserLabel();
+        document.getElementById("initHint").style.display = "none";
+      }else{
+        who.textContent = "Открыто вне Telegram";
+      }
+    }
+    setWho();
+
+    // ================= API BASE =================
+    const API_BASE = "https://api.temo4ka4.ru";
+
+    async function fetchMaybeJson(url, options){
+      const res = await fetch(url, options);
+      const text = await res.text();
+      let data = null;
+      if (text && text.trim().length){
+        try { data = JSON.parse(text); } catch { data = text; }
+      }
+      if (!res.ok){
+        const detail = (data && typeof data === "object" && (data.detail || data.error)) ? (data.detail || data.error) : null;
+        const msg = detail || (typeof data === "string" ? data.slice(0, 200) : `HTTP ${res.status}`);
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    async function apiHomeworkRange(daysAhead = 30){
+      const initData = getInitData();
+      if (!initData) throw new Error("no_initData");
+      const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
+      return await fetchMaybeJson(url, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "x-telegram-initdata": initData
+        }
+      });
+    }
+
+    function normalizeByDay(apiData){
+      if (!apiData) return {};
+      if (typeof apiData === "string"){
+        const now = new Date();
+        const todayISO = toISODate(now);
+        return { [todayISO]: [apiData] };
+      }
+      if (typeof apiData !== "object") return {};
+      if (apiData.by_day && typeof apiData.by_day === "object") return apiData.by_day;
+      if (apiData.days && typeof apiData.days === "object") return apiData.days;
+      const keys = Object.keys(apiData);
+      if (keys.some(k => /^\d{4}-\d{2}-\d{2}$/.test(k))) return apiData;
+      return {};
+    }
+
+    // ================= SUBJECT EMOJI =================
+    const SUBJECT_EMOJI = [
+      { re: /алгебр/i, e: "📐" },
+      { re: /геометр/i, e: "📏" },
+      { re: /матем/i, e: "🧮" },
+      { re: /рус/i, e: "✍️" },
+      { re: /литер/i, e: "📚" },
+      { re: /англ/i, e: "🇬🇧" },
+      { re: /истор/i, e: "🏛️" },
+      { re: /общест/i, e: "👥" },
+      { re: /физик/i, e: "⚡" },
+      { re: /хими/i, e: "🧪" },
+      { re: /биолог/i, e: "🧬" },
+      { re: /географ/i, e: "🌍" },
+      { re: /информ/i, e: "💻" },
+      { re: /технолог/i, e: "🛠️" },
+      { re: /музык/i, e: "🎵" },
+      { re: /изо|рисован/i, e: "🎨" },
+      { re: /физкульт|спорт/i, e: "🏃" },
+    ];
+    function emojiForSubject(subject){
+      const s = (subject || "").trim();
+      if (!s) return "📝";
+      const hit = SUBJECT_EMOJI.find(x => x.re.test(s));
+      return hit ? hit.e : "📝";
+    }
+
+    // ================= SETTINGS LOAD/SAVE =================
+    function lsGet(key, fallback){ const v = localStorage.getItem(key); return (v===null||v===undefined||v==="") ? fallback : v; }
+    function lsSet(key, value){ localStorage.setItem(key, String(value)); }
+
+    function applyTheme(theme){
+      const root = document.documentElement;
+      root.dataset.theme = (theme === "dark") ? "dark" : "light";
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", theme === "dark" ? "#0b1020" : "#ffffff");
+      syncSegButtons();
+    }
+    function applyAccent(accent){
+      const root = document.documentElement;
+      root.dataset.accent = (accent === "purple" || accent === "mint") ? accent : "standard";
+      syncSegButtons();
+    }
+    function applyTextSize(v){
+      const root = document.documentElement;
+      root.dataset.text = (v === "s" || v === "l") ? v : "m";
+      syncSegButtons();
+    }
+
+    
+    function logoGlyph(key){
+      // Старые значения поддерживаем, чтобы не ломать существующие профили
+      switch(key){
+        case "book": return { type:"text", val:"📘" };
+        case "notebook": return { type:"text", val:"🗒️" };
+        case "school": return { type:"text", val:"🏫" };
+        case "owl": return { type:"text", val:"🦉" };
+        case "logo2": return { type:"img",  val:"logo2.jpg" };
+        case "logo3": return { type:"img",  val:"logo3.webp" };
+        case "logo4": return { type:"img",  val:"logo4.jpg" };
+        case "logo5": return { type:"img",  val:"logo5.webp" };
+        case "logo1":
+        default: return { type:"img", val:"klasik.jpg" };
+      }
+    }
+    function setLogoNode(el, info){
+      if (!el) return;
+      // если это div.logo — переключаем в режим картинки
+      if (info.type === "img"){
+        el.classList.add("is-img");
+        el.textContent = "";
+        el.innerHTML = '<img src="'+info.val+'" alt="logo">';
+      } else {
+        el.classList.remove("is-img");
+        el.innerHTML = "";
+        el.textContent = info.val;
+      }
+    }
+    function applyLogo(key){
+      const info = logoGlyph(key);
+      setLogoNode(document.getElementById("appLogo"), info);
+      setLogoNode(document.getElementById("splashLogo"), info);
+      setLogoNode(document.getElementById("miniLogo"), info);
+      syncSegButtons();
+    }
+
+
+    function getShowEmoji(){ return lsGet(EMOJI_KEY, "on") === "on"; }
+    function getEnableDone(){ return lsGet(DONE_KEY, "on") === "on"; }
+    function getAutoRefresh(){ return lsGet(AUTO_KEY, "on") === "on"; }
+    function getStaleMin(){
+      const v = parseInt(lsGet(STALE_KEY, "15"), 10);
+      return [5,15,30,60].includes(v) ? v : 15;
+    }
+    function getConfirmClear(){ return lsGet(CONFIRM_KEY, "on") === "on"; }
+
+    function syncSegButtons(){
+      const theme = lsGet(THEME_KEY, "light");
+      const accent = lsGet(ACCENT_KEY, "standard");
+      const logo = lsGet(LOGO_KEY, "dz");
+      const emoji = lsGet(EMOJI_KEY, "on");
+      const done = lsGet(DONE_KEY, "on");
+      const text = lsGet(TEXT_KEY, "m");
+      const auto = lsGet(AUTO_KEY, "on");
+      const stale = String(getStaleMin());
+      const confirm = lsGet(CONFIRM_KEY, "on");
+
+      document.querySelectorAll("#modeSeg button").forEach(b => b.dataset.on = (b.dataset.mode === theme) ? "true" : "false");
+      document.querySelectorAll("#accentSeg button").forEach(b => b.dataset.on = (b.dataset.accent === accent) ? "true" : "false");
+      document.querySelectorAll("#logoSeg button").forEach(b => b.dataset.on = (b.dataset.logo === logo) ? "true" : "false");
+      document.querySelectorAll("#emojiSeg button").forEach(b => b.dataset.on = ((b.dataset.emoji === "on") === (emoji === "on")) ? "true" : "false");
+      document.querySelectorAll("#doneSeg button").forEach(b => b.dataset.on = ((b.dataset.done === "on") === (done === "on")) ? "true" : "false");
+      document.querySelectorAll("#textSeg button").forEach(b => b.dataset.on = (b.dataset.text === text) ? "true" : "false");
+      document.querySelectorAll("#autoSeg button").forEach(b => b.dataset.on = ((b.dataset.auto === "on") === (auto === "on")) ? "true" : "false");
+      document.querySelectorAll("#staleSeg button").forEach(b => b.dataset.on = (b.dataset.stale === stale) ? "true" : "false");
+      document.querySelectorAll("#confirmSeg button").forEach(b => b.dataset.on = ((b.dataset.confirm === "on") === (confirm === "on")) ? "true" : "false");
+
+      const sum = [];
+      sum.push(theme === "dark" ? "Тёмная" : "Светлая");
+      sum.push(accent === "purple" ? "Фиолет" : (accent === "mint" ? "Мята" : "Стандарт"));
+      sum.push("Текст " + text.toUpperCase());
+      document.getElementById("settingsSummary").textContent = sum.join(" • ");
+    }
+
+    function initSettings(){
+      const theme = lsGet(THEME_KEY, "light");
+      const accent = lsGet(ACCENT_KEY, "standard");
+      const logo = lsGet(LOGO_KEY, "dz");
+      const text = lsGet(TEXT_KEY, "m");
+
+      applyTheme(theme);
+      applyAccent(accent);
+      applyLogo(logo);
+      applyTextSize(text);
+
+      syncSegButtons();
+    }
+    initSettings();
+
+    // ================= SETTINGS OVERLAYS =================
+    const settingsOverlay = document.getElementById("settingsOverlay");
+    const reportOverlay = document.getElementById("reportOverlay");
+
+    function openOverlay(overlayEl){
+      overlayEl.classList.add("show");
+      overlayEl.setAttribute("aria-hidden","false");
+      document.body.classList.add("modal-open");
+    }
+    function closeOverlay(overlayEl){
+      overlayEl.classList.remove("show");
+      overlayEl.setAttribute("aria-hidden","true");
+      if (![settingsOverlay, reportOverlay].some(o => o.classList.contains("show"))){
+        document.body.classList.remove("modal-open");
+      }
+    }
+
+    function showMiniSplash(text, tip){
+      const el = document.getElementById("miniSplash");
+      document.getElementById("miniSub").textContent = text || "Загружаем настройки…";
+      document.getElementById("miniTip").textContent = tip || "Совет: можно очистить кэш, если что-то сломалось.";
+      el.style.display = "grid";
+      return () => { el.style.display = "none"; };
+    }
+
+    document.getElementById("openSettingsBtn").addEventListener("click", () => {
+      const hide = showMiniSplash("Загрузка настроек…", "Совет: включи галочки “сделано”.");
+      setTimeout(() => {
+        hide();
+        openOverlay(settingsOverlay);
+      }, 3000);
+    });
+
+    document.getElementById("closeSettings").addEventListener("click", () => closeOverlay(settingsOverlay));
+    settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeOverlay(settingsOverlay); });
+
+    document.getElementById("openReport").addEventListener("click", () => openOverlay(reportOverlay));
+    document.getElementById("closeReport").addEventListener("click", () => closeOverlay(reportOverlay));
+    reportOverlay.addEventListener("click", (e) => { if (e.target === reportOverlay) closeOverlay(reportOverlay); });
+
+    // clickable @Temo4ka4
+    document.getElementById("openDev").addEventListener("click", () => {
+      const url = "https://t.me/Temo4ka4";
+      if (tg?.openTelegramLink) tg.openTelegramLink(url);
+      else window.open(url, "_blank");
+    });
+
+    // ================= SEG BUTTONS HANDLERS =================
+    document.getElementById("modeSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-mode]"); if (!b) return;
+      lsSet(THEME_KEY, b.dataset.mode);
+      applyTheme(b.dataset.mode);
+      toast(b.dataset.mode === "dark" ? "Тёмный режим" : "Светлый режим");
+      // перерендерим, чтобы линии/вид был норм
+      rerenderAllVisible();
+    });
+
+    document.getElementById("accentSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-accent]"); if (!b) return;
+      lsSet(ACCENT_KEY, b.dataset.accent);
+      applyAccent(b.dataset.accent);
+      toast("Тема: " + (b.dataset.accent === "purple" ? "Фиолет" : b.dataset.accent === "mint" ? "Мята" : "Стандарт"));
+    });
+
+    document.getElementById("logoSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-logo]"); if (!b) return;
+      lsSet(LOGO_KEY, b.dataset.logo);
+      applyLogo(b.dataset.logo);
+      toast("Логотип изменён");
+    });
+
+    document.getElementById("emojiSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-emoji]"); if (!b) return;
+      lsSet(EMOJI_KEY, b.dataset.emoji);
+      syncSegButtons();
+      toast(b.dataset.emoji === "on" ? "Эмодзи включены" : "Эмодзи скрыты");
+      rerenderAllVisible();
+    });
+
+    document.getElementById("doneSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-done]"); if (!b) return;
+      lsSet(DONE_KEY, b.dataset.done === "on" ? "on" : "off");
+      syncSegButtons();
+      toast(b.dataset.done === "on" ? "Галочки включены" : "Галочки выключены");
+      rerenderAllVisible();
+    });
+
+    document.getElementById("textSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-text]"); if (!b) return;
+      lsSet(TEXT_KEY, b.dataset.text);
+      applyTextSize(b.dataset.text);
+      toast("Размер текста: " + b.dataset.text.toUpperCase());
+    });
+
+    document.getElementById("autoSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-auto]"); if (!b) return;
+      lsSet(AUTO_KEY, b.dataset.auto === "on" ? "on" : "off");
+      syncSegButtons();
+      toast(b.dataset.auto === "on" ? "Автообновление: Вкл" : "Автообновление: Выкл");
+    });
+
+    document.getElementById("staleSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-stale]"); if (!b) return;
+      lsSet(STALE_KEY, b.dataset.stale);
+      syncSegButtons();
+      toast("Устаревание: " + b.dataset.stale + " мин");
+    });
+
+    document.getElementById("confirmSeg").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-confirm]"); if (!b) return;
+      lsSet(CONFIRM_KEY, b.dataset.confirm === "on" ? "on" : "off");
+      syncSegButtons();
+      toast(b.dataset.confirm === "on" ? "Будем спрашивать" : "Без подтверждения");
+    });
+
+    // ================= CACHING =================
+    function readHwCache(){
+      try{
+        const raw = localStorage.getItem(HW_CACHE_KEY);
+        return raw ? JSON.parse(raw) : {};
+      }catch(e){
+        return {};
+      }
+    }
+    function writeHwCache(cacheObj){
+      try{ localStorage.setItem(HW_CACHE_KEY, JSON.stringify(cacheObj)); }catch(e){}
+    }
+    function getHwCache(daysAhead){
+      const all = readHwCache();
+      return all[String(daysAhead)] || null;
+    }
+    function setHwCache(daysAhead, byDay){
+      const all = readHwCache();
+      all[String(daysAhead)] = { ts: Date.now(), byDay };
+      writeHwCache(all);
+    }
+    function clearHwCache(){
+      try{ localStorage.removeItem(HW_CACHE_KEY); }catch(e){}
+    }
+
+    // ================= DONE MAP =================
+    function readDoneMap(){
+      try{
+        const raw = localStorage.getItem(DONE_MAP_KEY);
+        return raw ? JSON.parse(raw) : {};
+      }catch(e){ return {}; }
+    }
+    function writeDoneMap(m){
+      try{ localStorage.setItem(DONE_MAP_KEY, JSON.stringify(m)); }catch(e){}
+    }
+    function isDone(id){
+      const m = readDoneMap();
+      return !!m[id];
+    }
+    function setDone(id, value){
+      const m = readDoneMap();
+      if (value) m[id] = true;
+      else delete m[id];
+      writeDoneMap(m);
+    }
+
+    // ================= SPLASH TEXT ROTATION =================
+    const splashLines = [
+      "Загружаем домашку…",
+      "Проверяем обновления…",
+      "Подключаемся к классу…",
+      "Собираем задания по предметам…"
+    ];
+    const splashTips = [
+      "Совет: нажми 📋, чтобы скопировать ДЗ.",
+      "Совет: в “Всё ДЗ” есть поиск 🔎.",
+      "Совет: можно скрыть эмодзи предметов.",
+      "Совет: включи галочки “сделано”."
+    ];
+    function setSplashText(){
+      document.getElementById("splashSub").textContent = splashLines[Math.floor(Math.random()*splashLines.length)];
+      document.getElementById("splashTip").textContent = splashTips[Math.floor(Math.random()*splashTips.length)];
+    }
+    setSplashText();
+
+    // ================= DATA LOADING =================
+    const now = new Date();
+    const todayISO = toISODate(now);
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const tomorrowISO = toISODate(tomorrow);
+
+    document.getElementById("todayChip").textContent = "📅 " + formatRu(now);
+    document.getElementById("tomorrowNote").textContent = prettyDateLabel(tomorrowISO);
+    document.getElementById("todayNote").textContent = prettyDateLabel(todayISO);
+
+    const pickDateEl = document.getElementById("pickDate");
+    const sDateEl = document.getElementById("sDate");
+    pickDateEl.value = todayISO;
+    sDateEl.value = todayISO;
+
+    let cacheByDayMem = null;
+    let cacheDaysAheadMem = null;
+
+    async function ensureCache(daysAhead){
+      // memory cache
+      if (cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
+
+      const auto = getAutoRefresh();
+      const staleMin = getStaleMin();
+
+      // localStorage cache
+      const cached = getHwCache(daysAhead);
+      const isStale = cached ? ((Date.now() - cached.ts) > staleMin*60*1000) : true;
+
+      if (cached && (!auto || !isStale)){
+        cacheByDayMem = cached.byDay;
+        cacheDaysAheadMem = daysAhead;
+        return cached.byDay;
+      }
+
+      // fetch
+      const data = await apiHomeworkRange(daysAhead);
+      const byDay = normalizeByDay(data);
+      cacheByDayMem = byDay;
+      cacheDaysAheadMem = daysAhead;
+      setHwCache(daysAhead, byDay);
+      return byDay;
+    }
+
+    // store for copy/search
+    const hwStore = {}; // id -> {date, subject, body}
+
+    function hwId(dateISO, subject, body){
+      const s = (dateISO||"") + "|" + (subject||"") + "|" + (body||"");
+      // djb2
+      let h = 5381;
+      for (let i=0;i<s.length;i++) h = ((h << 5) + h) + s.charCodeAt(i);
+      return "h" + (h >>> 0).toString(16);
+    }
+
+    function extractSubjectAndBody(line){
+      const obj = (typeof line === "object" && line) ? line : null;
+      const rawText = (typeof line === "string") ? line : (obj?.text ?? "");
+      let subject = (obj?.subject || "").trim();
+      let body = rawText;
+
+      if (!subject) {
+        const mm = rawText.match(/^(.{1,50}?)\s*[—-]\s*(.+)$/);
+        if (mm) {
+          subject = (mm[1] || "").trim();
+          body = (mm[2] || "").trim();
+        }
+      }
+      if (!subject) subject = "Домашка";
+      return { subject, body };
+    }
+
+    function buildTitle(subject){
+      if (!getShowEmoji()) return subject;
+      const em = emojiForSubject(subject);
+      return `${em} ${subject}`;
+    }
+
+    function cardHtml(dateISO, line){
+      const { subject, body } = extractSubjectAndBody(line);
+      const id = hwId(dateISO, subject, body);
+      hwStore[id] = { date: dateISO, subject, body };
+
+      const enableDone = getEnableDone();
+      const done = enableDone ? isDone(id) : false;
+      const title = buildTitle(subject);
+
+      return `
+        <article class="hw-card ${done ? "done" : ""}" data-id="${id}">
+          <div class="hw-top">
+            <div>
+              <p class="hw-title">${escapeHtml(title)}</p>
+              <p class="hw-date">${escapeHtml(dateISO)}</p>
+            </div>
+            <div class="hw-actions">
+              ${enableDone ? `<label class="checkwrap" title="Сделано">
+                <input type="checkbox" class="doneCheck" data-id="${id}" ${done ? "checked" : ""} />
+              </label>` : ``}
+              <button class="iconbtn" data-copy="${id}" title="Скопировать">📋</button>
+            </div>
+          </div>
+          <p class="hw-text">${escapeHtml(body)}</p>
+        </article>
+      `;
+    }
+
+    function renderCards(listEl, dateISO, items){
+      listEl.innerHTML = "";
+      if (!items || !items.length){
+        listEl.innerHTML = `<div class="skeleton">На <b>${escapeHtml(dateISO)}</b> пока нет домашки.</div>`;
+        return 0;
+      }
+      listEl.innerHTML = items.map(line => cardHtml(dateISO, line)).join("");
+      return items.length;
+    }
+
+    function renderGroupedAll(listEl, byDay){
+      listEl.innerHTML = "";
+      const dates = Object.keys(byDay).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+      if (!dates.length){
+        listEl.innerHTML = `<div class="skeleton">Пока нет ни одной записи ДЗ в диапазоне.</div>`;
+        return 0;
+      }
+      let total = 0;
+
+      const html = dates.map((d) => {
+        const items = byDay[d] || [];
+        const arr = Array.isArray(items) ? items : [];
+        total += arr.length;
+
+        const inner = arr.length
+          ? arr.map(line => `<div style="margin-top:10px;">${cardHtml(d, line)}</div>`).join("")
+          : `<div class="skeleton" style="margin-top:10px;">На этот день записей нет.</div>`;
+
+        return `
+          <section style="margin-top:12px;" data-day="${d}" id="day-${d}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div style="display:flex;flex-direction:column;">
+                <div style="font-weight:900; font-size:calc(14px * var(--scale)); letter-spacing:-.2px;">${escapeHtml(d)}</div>
+                <div style="font-size:calc(12px * var(--scale));color:var(--muted); margin-top:2px;">${escapeHtml(prettyDateLabel(d))}</div>
+              </div>
+              <span class="badge ${arr.length ? "warn" : ""}">${arr.length}</span>
+            </div>
+            ${inner}
+          </section>
+        `;
+      }).join("");
+
+      listEl.innerHTML = html;
+      return total;
+    }
+
+    // ================= TABS + PAGES (scroll sync) =================
+    const pagesEl = document.getElementById("pages");
+    const tabBtns = Array.from(document.querySelectorAll(".tab"));
+
+    function setActiveTab(i){
+      tabBtns.forEach(b => b.dataset.active = (Number(b.dataset.index) === i) ? "true" : "false");
+    }
+    function scrollToPage(i){
+      const w = pagesEl.clientWidth;
+      pagesEl.scrollTo({ left: i * w, behavior: "smooth" });
+      setActiveTab(i);
+      const btn = tabBtns.find(b => Number(b.dataset.index) === i);
+      if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
+    }
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const idx = Number(btn.dataset.index);
+        scrollToPage(idx);
+        if (idx === 0) await loadToday();
+        if (idx === 1) await loadTomorrow();
+        if (idx === 2) await loadAll();
+      });
+    });
+
+    let scrollTimer = null;
+    pagesEl.addEventListener("scroll", () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const i = Math.round(pagesEl.scrollLeft / pagesEl.clientWidth);
+        setActiveTab(i);
+        const btn = tabBtns.find(b => Number(b.dataset.index) === i);
+        if (btn) btn.scrollIntoView({ behavior:"smooth", inline:"center", block:"nearest" });
+      }, 80);
+    });
+
+    // ================= LOADERS =================
+    async function loadToday(){
+      const todayList = document.getElementById("todayList");
+      todayList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        const byDay = await ensureCache(0);
+        const c = renderCards(todayList, todayISO, byDay[todayISO] || []);
+        document.getElementById("todayCount").textContent = String(c);
+      }catch(e){
+        const msg = e?.message ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        todayList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        document.getElementById("todayCount").textContent = "0";
+      }
+    }
+
+    async function loadTomorrow(){
+      const tomorrowList = document.getElementById("tomorrowList");
+      tomorrowList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        const byDay = await ensureCache(1);
+        const c = renderCards(tomorrowList, tomorrowISO, byDay[tomorrowISO] || []);
+        document.getElementById("tomorrowCount").textContent = String(c);
+      }catch(e){
+        const msg = e?.message ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        tomorrowList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        document.getElementById("tomorrowCount").textContent = "0";
+      }
+    }
+
+  async function apiProposeHW({ day, subject, text }){
+    const initData = getInitData();
+    if (!initData) throw new Error("no_initData");
+
+    return await fetchMaybeJson(API_BASE + "/api/propose_hw", {
+     method: "POST",
+     headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "x-telegram-initdata": initData
+    },
+    body: JSON.stringify({ day, subject, text })
+  });
+}
+
+async function apiReportIssue({ title, details, page }){
+  const initData = getInitData();
+  if (!initData) throw new Error("no_initData");
+
+  return await fetchMaybeJson(API_BASE + "/api/report_issue", {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "x-telegram-initdata": initData
+    },
+    body: JSON.stringify({ title, details, page })
+  });
+}
+
+    async function loadAll(){
+      const allList = document.getElementById("allList");
+      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        const byDay = await ensureCache(60);
+        const total = renderGroupedAll(allList, byDay);
+        document.getElementById("allCount").textContent = String(total);
+        filterAll(document.getElementById("allSearch").value || "");
+      }catch(e){
+        const msg = e?.message ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        document.getElementById("allCount").textContent = "—";
+      }
+    }
+
+    async function loadPick(dateISO){
+      const pickList = document.getElementById("pickList");
+      pickList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+      try{
+        const days = calcDaysAhead(dateISO);
+        const byDay = await ensureCache(Math.max(0, days));
+        const items = byDay[dateISO] || [];
+        const cnt = renderCards(pickList, dateISO, items);
+        document.getElementById("pickCount").textContent = String(cnt);
+      }catch(e){
+        const msg = e?.message ? e.message : String(e);
+        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка: " + msg);
+        pickList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+        document.getElementById("pickCount").textContent = "—";
+      }
+    }
+
+    // pick buttons
+    document.getElementById("pickLoad").addEventListener("click", () => loadPick(pickDateEl.value));
+    document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
+    document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
+
+    // all buttons
+    document.getElementById("reloadAll").addEventListener("click", () => loadAll());
+
+    function jumpToDateInAll(dateISO){
+      const el = document.getElementById("day-" + dateISO);
+      if (el) el.scrollIntoView({ behavior:"smooth", block:"start" });
+      else toast("День не найден в списке");
+    }
+    document.getElementById("jumpToday").addEventListener("click", async () => {
+      await loadAll();
+      jumpToDateInAll(todayISO);
+    });
+    document.getElementById("jumpTomorrow").addEventListener("click", async () => {
+      await loadAll();
+      jumpToDateInAll(tomorrowISO);
+    });
+
+    // ================= SEARCH (ALL) =================
+    function filterAll(q){
+      const query = (q || "").trim().toLowerCase();
+      const allList = document.getElementById("allList");
+      const sections = Array.from(allList.querySelectorAll("section[data-day]"));
+
+      sections.forEach(sec => {
+        const cards = Array.from(sec.querySelectorAll(".hw-card[data-id]"));
+        let visible = 0;
+        cards.forEach(card => {
+          const id = card.getAttribute("data-id");
+          const it = hwStore[id];
+          const text = (it ? (it.subject + " " + it.body) : "").toLowerCase();
+          const ok = !query || text.includes(query);
+          card.style.display = ok ? "" : "none";
+          if (ok) visible++;
+        });
+        sec.style.display = (visible > 0 || !query) ? "" : "none";
+      });
+    }
+
+    document.getElementById("allSearch").addEventListener("input", (e) => filterAll(e.target.value));
+    document.getElementById("allSearchClear").addEventListener("click", () => {
+      const inp = document.getElementById("allSearch");
+      inp.value = "";
+      filterAll("");
+      inp.focus();
+    });
+
+    // ================= CARD ACTIONS (DONE + COPY) =================
+    document.addEventListener("change", (e) => {
+      const cb = e.target.closest(".doneCheck");
+      if (!cb) return;
+      const id = cb.dataset.id;
+      setDone(id, cb.checked);
+      const card = document.querySelector(`.hw-card[data-id="${id}"]`);
+      if (card){
+        if (cb.checked) card.classList.add("done");
+        else card.classList.remove("done");
+      }
+      toast(cb.checked ? "Отмечено сделанным" : "Снято");
+    });
+
+    document.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button[data-copy]");
+      if (!btn) return;
+      const id = btn.getAttribute("data-copy");
+      const it = hwStore[id];
+      if (!it) return;
+
+      const showEmoji = getShowEmoji();
+      const title = showEmoji ? (emojiForSubject(it.subject) + " " + it.subject) : it.subject;
+      const text = `${it.date}\n${title} — ${it.body}`;
+
+      const ok = await copyToClipboard(text);
+      toast(ok ? "Скопировано 📋" : "Не получилось скопировать");
+    });
+
+    function rerenderAllVisible(){
+      // Просто перезагружаем текущие списки (в памяти/кэше всё уже есть)
+      loadToday();
+      loadTomorrow();
+      // all — только если уже открыт/загружен
+      const allList = document.getElementById("allList");
+      if (allList && allList.querySelector("section[data-day]")) loadAll();
+      // pick — оставляем как есть
+    }
+
+    // ================= CLEAR CACHE =================
+    document.getElementById("clearCacheBtn").addEventListener("click", () => {
+      const needConfirm = getConfirmClear();
+      if (needConfirm){
+        const ok = confirm("Очистить кэш? Данные подтянутся заново при следующем открытии.");
+        if (!ok) return;
+      }
+      clearHwCache();
+      cacheByDayMem = null;
+      cacheDaysAheadMem = null;
+      toast("Кэш очищен");
+    });
+
+    // ================= REPORT =================
+    document.getElementById("copyReport").addEventListener("click", async () => {
+      const t = (document.getElementById("repText").value || "").trim();
+      if (!t) return toast("Напиши текст");
+      const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
+      toast(ok ? "Скопировано" : "Не скопировалось");
+    });
+
+    document.getElementById("sendReport").addEventListener("click", async () => {
+      const t = (document.getElementById("repText").value || "").trim();
+      if (!t) return toast("Напиши текст");
+
+      const payload = {
+        action: "report_bug",
+        text: t,
+        page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
+      };
+
+      if (tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
+        toast("Отправлено");
+        document.getElementById("repText").value = "";
+        closeOverlay(reportOverlay);
+      }else{
+        const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
+        toast(ok ? "Скопировано (вне Telegram)" : "Вне Telegram");
+      }
+    });
+
+    // ================= SUGGEST =================
+    function buildSuggestPayload(){
+      return {
+        action: "suggest_hw",
+        date: document.getElementById("sDate").value || todayISO,
+        subject: (document.getElementById("sSubject").value || "").trim(),
+        text: (document.getElementById("sText").value || "").trim()
+      };
+    }
+
+    document.getElementById("sendSuggest").addEventListener("click", () => {
+      const payload = buildSuggestPayload();
+
+      if (!payload.subject || !payload.text){
+        toast("Заполни предмет и текст");
+        return;
+      }
+
+      if (tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
+        toast("Отправлено в бота");
+      }else{
+        toast("Это работает только внутри Telegram");
+      }
+    });
+
+    document.getElementById("copySuggest").addEventListener("click", async () => {
+      const payload = buildSuggestPayload();
+      if (!payload.subject || !payload.text){
+        toast("Заполни предмет и текст");
+        return;
+      }
+      const text = `📩 Предложение ДЗ\n📅 ${payload.date}\n📚 ${payload.subject}\n\n${payload.text}`;
+      const ok = await copyToClipboard(text);
+      toast(ok ? "Скопировано" : "Не скопировалось");
+    });
+
+    document.getElementById("clearSuggest").addEventListener("click", () => {
+      document.getElementById("sSubject").value = "";
+      document.getElementById("sText").value = "";
+      toast("Очищено");
+    });
+
+    document.getElementById("openBot").addEventListener("click", () => {
+      const url = "https://t.me/Temo4ka4bot";
+      if (tg?.openTelegramLink) tg.openTelegramLink(url);
+      else window.open(url, "_blank");
+    });
+
+    // ================= INIT SPLASH =================
+    function hideSplash(){
+      const splash = document.getElementById("splash");
+      if (!splash) return;
+      splash.classList.add("hide");
+      setTimeout(() => splash.remove(), 350);
+    }
+
+    // ================= INIT =================
+    
+    function openDevChat(){
+      const url = "https://t.me/" + DEV_USERNAME;
+      if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
+      else window.open(url, "_blank");
+    }
+
+    function setTechworks(on, title, msg){
+      const o = document.getElementById("techOverlay");
+      if (!o) return;
+      if (on){
+        document.getElementById("techTitle").textContent = title || "Технические работы";
+        document.getElementById("techHead").textContent = "Сервисы обновляются";
+        document.getElementById("techMsg").textContent = msg || "Сейчас мы обновляем сервисы. Домашка временно недоступна. Попробуй ещё раз чуть позже.";
+        o.classList.add("on");
+        o.setAttribute("aria-hidden","false");
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+      } else {
+        o.classList.remove("on");
+        o.setAttribute("aria-hidden","true");
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+      }
+    }
+
+    function shouldShowTechworks(){
+      if (FORCE_TECHWORKS === true) return true;
+      if (FORCE_TECHWORKS === false) return false;
+
+      const sp = new URLSearchParams(location.search);
+      if (sp.get("tech") === "1" || sp.get("maintenance") === "1") return true;
+      if ((sp.get("mode") || "").toLowerCase() === "tech") return true;
+
+      // Telegram start_param (если ты открываешь WebApp через bot.startApp с параметром)
+      try{
+        const p = (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) ? String(tg.initDataUnsafe.start_param) : "";
+        if (p.toLowerCase().includes("tech") || p.toLowerCase().includes("maintenance")) return true;
+      }catch(e){}
+
+      return false;
+    }
+
+    // Кнопки техработ
+    (function bindTechButtons(){
+      const r = document.getElementById("techRetry");
+      const x = document.getElementById("techExit");
+      const d = document.getElementById("techDev");
+      if (r) r.addEventListener("click", () => location.reload());
+      if (x) x.addEventListener("click", () => { try{ if (tg && tg.close) tg.close(); }catch(e){} window.close(); });
+      if (d) d.addEventListener("click", openDevChat);
+    })();
+
+
+    (async () => {
+      if (shouldShowTechworks()){ setTechworks(true); return; }
+      if (tg){
+        try{ tg.ready(); tg.expand(); }catch(e){}
+      }
+
+      const t0 = Date.now();
+      const MIN_MS = 3000;
+
+      // стартуем с "На сегодня"
+      await loadToday();
+      await loadTomorrow();
+      await loadPick(todayISO);
+
+      const spent = Date.now() - t0;
+      const left = Math.max(0, MIN_MS - spent);
+      setTimeout(hideSplash, left);
+    })();
+  </script>
+</body>
+</html>
