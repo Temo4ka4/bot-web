@@ -794,26 +794,28 @@
       text-underline-offset: 2px;
     }
   
-    /* ❄️ Зимний фон: снежинки (лёгкий вайб, без анимации) */
-    body::before{
-      content:"";
-      position:fixed;
-      inset:-20px;
-      pointer-events:none;
-      opacity:.18;
-      filter: blur(.15px);
-      background-image:
-        radial-gradient(circle at 12% 18%, rgba(255,255,255,.55) 0 1.5px, transparent 2px),
-        radial-gradient(circle at 28% 72%, rgba(255,255,255,.40) 0 1.2px, transparent 1.8px),
-        radial-gradient(circle at 70% 28%, rgba(255,255,255,.40) 0 1.4px, transparent 2px),
-        radial-gradient(circle at 84% 62%, rgba(255,255,255,.32) 0 1.1px, transparent 1.8px),
-        radial-gradient(circle at 48% 44%, rgba(255,255,255,.28) 0 1.2px, transparent 1.9px),
-        radial-gradient(circle at 6% 86%, rgba(255,255,255,.24) 0 1.0px, transparent 1.6px),
-        radial-gradient(circle at 94% 12%, rgba(255,255,255,.24) 0 1.0px, transparent 1.6px);
-      background-size: 520px 520px;
-      background-repeat: repeat;
-      transform: translateZ(0);
-    }
+    /* ❄️ Snow overlay (видно и в светлой, и в тёмной теме) */
+html{ --snow1: rgba(0,0,0,.10); --snow2: rgba(0,0,0,.06); }
+html[data-theme="dark"]{ --snow1: rgba(255,255,255,.45); --snow2: rgba(255,255,255,.25); }
+
+body::before{
+  content:"";
+  position:fixed;
+  inset:-20px;
+  pointer-events:none;
+  z-index: 0;
+  opacity: .55;
+  background-image:
+    radial-gradient(circle at 12% 18%, var(--snow1) 0 1.6px, transparent 2.2px),
+    radial-gradient(circle at 28% 72%, var(--snow2) 0 1.2px, transparent 2.0px),
+    radial-gradient(circle at 70% 28%, var(--snow2) 0 1.4px, transparent 2.1px),
+    radial-gradient(circle at 84% 62%, var(--snow1) 0 1.1px, transparent 1.9px),
+    radial-gradient(circle at 48% 44%, var(--snow2) 0 1.2px, transparent 2.0px),
+    radial-gradient(circle at 6% 86%,  var(--snow2) 0 1.0px, transparent 1.8px),
+    radial-gradient(circle at 94% 12%, var(--snow2) 0 1.0px, transparent 1.8px);
+  background-size: 420px 420px;
+  background-repeat: repeat;
+}
 
     /* 🛠 Техработы: fullscreen-оверлей (без крестика, чтобы не абузили) */
     .tech-overlay{
