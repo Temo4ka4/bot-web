@@ -2245,15 +2245,20 @@ async function apiReportIssue({ title, details, page }){
     });
 
     document.getElementById("sendReport").addEventListener("click", async () => {
-      const t = (document.getElementById("repText").value || "").trim();
-      if (!t) return toast("Напиши текст");
+  const t = (document.getElementById("repText").value || "").trim();
+  if (!t) return toast("Напиши текст");
 
-     const payload = {
-  action: "report_issue",
-  title: "Ошибка в WebApp",
-  details: t,
-  page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
-};
+  const page = document.querySelector(".tab[data-active='true']")?.textContent?.trim() || "";
+
+  try{
+    await apiReportIssue({ title: "Ошибка в WebApp", details: t, page });
+    toast("✅ Отправлено");
+    document.getElementById("repText").value = "";
+    closeOverlay(reportOverlay);
+  }catch(e){
+    toast("❌ Не отправилось: " + (e?.message || "ошибка"));
+  }
+});
 
 
       if (tg && tg.sendData){
@@ -2268,22 +2273,31 @@ async function apiReportIssue({ title, details, page }){
     });
 
     // ================= SUGGEST =================
-    function buildSuggestPayload(){
-      return {
-        action: "propose_hw",
-        day: payload.date,  
-        subject: (document.getElementById("sSubject").value || "").trim(),
-        text: (document.getElementById("sText").value || "").trim()
-      };
-    }
+   function buildSuggestPayload(){
+  return {
+    action: "propose_hw",
+    day: (document.getElementById("sDate").value || todayISO),
+    subject: (document.getElementById("sSubject").value || "").trim(),
+    text: (document.getElementById("sText").value || "").trim()
+  };
+}
 
-    document.getElementById("sendSuggest").addEventListener("click", () => {
-      const payload = buildSuggestPayload();
+   document.getElementById("sendSuggest").addEventListener("click", async () => {
+  const payload = buildSuggestPayload();
 
-      if (!payload.subject || !payload.text){
-        toast("Заполни предмет и текст");
-        return;
-      }
+  if (!payload.subject || !payload.text){
+    toast("Заполни предмет и текст");
+    return;
+  }
+
+  try{
+    await apiProposeHW({ day: payload.day, subject: payload.subject, text: payload.text });
+    toast("✅ Отправлено");
+    document.getElementById("sText").value = "";
+  }catch(e){
+    toast("❌ Не отправилось: " + (e?.message || "ошибка"));
+  }
+});
 
       if (tg && tg.sendData){
         tg.sendData(JSON.stringify(payload));
@@ -2299,7 +2313,7 @@ async function apiReportIssue({ title, details, page }){
         toast("Заполни предмет и текст");
         return;
       }
-      const text = `📩 Предложение ДЗ\n📅 ${payload.date}\n📚 ${payload.subject}\n\n${payload.text}`;
+     const text = `📩 Предложение ДЗ\n📅 ${payload.day}\n📚 ${payload.subject}\n\n${payload.text}`;
       const ok = await copyToClipboard(text);
       toast(ok ? "Скопировано" : "Не скопировалось");
     });
