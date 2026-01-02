@@ -2244,7 +2244,7 @@ async function apiReportIssue({ title, details, page }){
       toast(ok ? "Скопировано" : "Не скопировалось");
     });
 
-    document.getElementById("sendReport").addEventListener("click", async () => {
+   document.getElementById("sendReport").addEventListener("click", async () => {
   const t = (document.getElementById("repText").value || "").trim();
   if (!t) return toast("Напиши текст");
 
@@ -2261,17 +2261,6 @@ async function apiReportIssue({ title, details, page }){
 });
 
 
-      if (tg && tg.sendData){
-        tg.sendData(JSON.stringify(payload));
-        toast("Отправлено");
-        document.getElementById("repText").value = "";
-        closeOverlay(reportOverlay);
-      }else{
-        const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
-        toast(ok ? "Скопировано (вне Telegram)" : "Вне Telegram");
-      }
-    });
-
     // ================= SUGGEST =================
    function buildSuggestPayload(){
   return {
@@ -2282,7 +2271,7 @@ async function apiReportIssue({ title, details, page }){
   };
 }
 
-   document.getElementById("sendSuggest").addEventListener("click", async () => {
+document.getElementById("sendSuggest").addEventListener("click", async () => {
   const payload = buildSuggestPayload();
 
   if (!payload.subject || !payload.text){
@@ -2299,20 +2288,6 @@ async function apiReportIssue({ title, details, page }){
   }
 });
 
-      if (tg && tg.sendData){
-        tg.sendData(JSON.stringify(payload));
-        toast("Отправлено в бота");
-      }else{
-        toast("Это работает только внутри Telegram");
-      }
-    });
-
-    document.getElementById("copySuggest").addEventListener("click", async () => {
-      const payload = buildSuggestPayload();
-      if (!payload.subject || !payload.text){
-        toast("Заполни предмет и текст");
-        return;
-      }
      const text = `📩 Предложение ДЗ\n📅 ${payload.day}\n📚 ${payload.subject}\n\n${payload.text}`;
       const ok = await copyToClipboard(text);
       toast(ok ? "Скопировано" : "Не скопировалось");
