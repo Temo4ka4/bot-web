@@ -803,7 +803,6 @@ body::before{
   position:fixed;
   inset:-20px;
   pointer-events:none;
-  .app{ position: relative; z-index: 1; }
   opacity: .55;
   background-image:
     radial-gradient(circle at 12% 18%, var(--snow1) 0 1.6px, transparent 2.2px),
@@ -816,6 +815,7 @@ body::before{
   background-size: 420px 420px;
   background-repeat: repeat;
 }
+ .app{ position: relative; z-index: 1; }
 
     /* 🛠 Техработы: fullscreen-оверлей (без крестика, чтобы не абузили) */
     .tech-overlay{
@@ -2249,10 +2249,11 @@ async function apiReportIssue({ title, details, page }){
       if (!t) return toast("Напиши текст");
 
       const payload = {
-        action: "report_bug",
-        text: t,
-        page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
-      };
+  action: "bug_report",
+  text: t,
+  page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
+};
+
 
       if (tg && tg.sendData){
         tg.sendData(JSON.stringify(payload));
