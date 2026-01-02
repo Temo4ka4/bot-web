@@ -2260,17 +2260,6 @@ async function apiReportIssue({ title, details, page }){
   }
 });
 
-
-    // ================= SUGGEST =================
-   function buildSuggestPayload(){
-  return {
-    action: "propose_hw",
-    day: (document.getElementById("sDate").value || todayISO),
-    subject: (document.getElementById("sSubject").value || "").trim(),
-    text: (document.getElementById("sText").value || "").trim()
-  };
-}
-
 document.getElementById("sendSuggest").addEventListener("click", async () => {
   const payload = buildSuggestPayload();
 
@@ -2299,11 +2288,6 @@ document.getElementById("sendSuggest").addEventListener("click", async () => {
       toast("Очищено");
     });
 
-    document.getElementById("openBot").addEventListener("click", () => {
-      const url = "https://t.me/Temo4ka4bot";
-      if (tg?.openTelegramLink) tg.openTelegramLink(url);
-      else window.open(url, "_blank");
-    });
 
     // ================= INIT SPLASH =================
     function hideSplash(){
