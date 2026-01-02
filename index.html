@@ -2248,9 +2248,10 @@ async function apiReportIssue({ title, details, page }){
       const t = (document.getElementById("repText").value || "").trim();
       if (!t) return toast("Напиши текст");
 
-      const payload = {
-  action: "bug_report",
-  text: t,
+     const payload = {
+  action: "report_issue",
+  title: "Ошибка в WebApp",
+  details: t,
   page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
 };
 
@@ -2269,8 +2270,8 @@ async function apiReportIssue({ title, details, page }){
     // ================= SUGGEST =================
     function buildSuggestPayload(){
       return {
-        action: "suggest_hw",
-        date: document.getElementById("sDate").value || todayISO,
+        action: "propose_hw",
+        day: payload.date,  
         subject: (document.getElementById("sSubject").value || "").trim(),
         text: (document.getElementById("sText").value || "").trim()
       };
