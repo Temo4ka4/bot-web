@@ -1444,6 +1444,13 @@ body::before{
     // ================= TELEGRAM WEBAPP =================
     const tg = window.Telegram?.WebApp || null;
 
+    try {
+  const tg = window.Telegram?.WebApp;
+  if (tg && tg.sendData) {
+    tg.sendData(JSON.stringify({ action: "ping_webapp", t: Date.now() }));
+  }
+} catch (e) {}
+
     function getInitData(){ return tg?.initData || ""; }
     function getUserLabel(){
       const u = tg?.initDataUnsafe?.user;
