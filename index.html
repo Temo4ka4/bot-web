@@ -1027,7 +1027,7 @@ body::before{
           <div class="setting-top">
             <div>
               <p class="setting-name">🧩 Логотип в шапке</p>
-              <p class="setting-desc">DZ / Книга / Тетрадь / Школа / Сова</p>
+              <p class="setting-desc">Выбери понравившийся логотип</p>
             </div>
             
             <div class="seg" id="logoSeg">
@@ -1044,8 +1044,8 @@ body::before{
         <div class="setting">
           <div class="setting-top">
             <div>
-              <p class="setting-name">🙂 Эмодзи предметов</p>
-              <p class="setting-desc">Показывать/скрыть эмодзи перед названием</p>
+              <p class="setting-name">🙂 Двойные эмодзи предметов</p>
+              <p class="setting-desc">Показывать/скрыть двойные эмодзи перед названием предметов</p>
             </div>
             <div class="seg" id="emojiSeg">
               <button data-emoji="on">Показывать</button>
@@ -1107,7 +1107,7 @@ body::before{
           <div class="setting-top">
             <div>
               <p class="setting-name">🧽 Очистка кэша</p>
-              <p class="setting-desc">Если что-то сломалось — очисти кэш и перезайди</p>
+              <p class="setting-desc">Если что-то сломалось - очисти кэш и перезайди. Если нету домашки - очисти кэш.</p>
             </div>
             <div class="seg" id="confirmSeg">
               <button data-confirm="on">Подтверждать</button>
@@ -1130,7 +1130,7 @@ body::before{
             </div>
           </div>
           <p class="setting-desc" style="margin-top:8px;">
-            Если ты не в Telegram — можно просто открыть <span class="muted-link" id="openDev">@Temo4ka4</span>.
+            В данный момент не работает - можно просто открыть <span class="muted-link" id="openDev">@Temo4ka4</span>.
           </p>
         </div>
 
@@ -2106,21 +2106,22 @@ async function apiReportIssue({ title, details, page }){
   });
 }
 
-    async function loadAll(){
-      const allList = document.getElementById("allList");
-      allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
-      try{
-        const byDay = await ensureCache(60);
-        const total = renderGroupedAll(allList, byDay);
-        document.getElementById("allCount").textContent = String(total);
-        filterAll(document.getElementById("allSearch").value || "");
-      }catch(e){
-        const msg = e?.message ? e.message : String(e);
-        const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
-        allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
-        document.getElementById("allCount").textContent = "—";
-      }
-    }
+  async function loadAll(force = false){
+  const allList = document.getElementById("allList");
+  allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+  try{
+    const byDay = await ensureCache(60, force);
+    const total = renderGroupedAll(allList, byDay);
+    document.getElementById("allCount").textContent = String(total);
+    filterAll(document.getElementById("allSearch").value || "");
+  }catch(e){
+    const msg = e?.message ? e.message : String(e);
+    const pretty = (msg === "no_initData") ? "Нет initData. Открой из Telegram-кнопки." : ("Ошибка загрузки: " + msg);
+    allList.innerHTML = `<div class="skeleton">${escapeHtml(pretty)}</div>`;
+    document.getElementById("allCount").textContent = "—";
+  }
+}
+
 
     async function loadPick(dateISO){
       const pickList = document.getElementById("pickList");
@@ -2144,8 +2145,18 @@ async function apiReportIssue({ title, details, page }){
     document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
-    // all buttons
-    document.getElementById("reloadAll").addEventListener("click", () => loadAll());
+   document.getElementById("reloadAll").addEventListener("click", async () => {
+  // убиваем memory-cache (иначе ensureCache вернёт старьё)
+  cacheByDayMem = null;
+  cacheDaysAheadMem = null;
+
+  // убиваем localStorage-cache
+  clearHwCache();
+
+  await loadAll(true);
+  toast("Обновлено ✅");
+});
+
 
     function jumpToDateInAll(dateISO){
       const el = document.getElementById("day-" + dateISO);
