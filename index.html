@@ -1875,12 +1875,21 @@ body::before{
     let cacheByDayMem = null;
     let cacheDaysAheadMem = null;
 
-    async function ensureCache(daysAhead){
-      // memory cache
-      if (cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
+   async function ensureCache(daysAhead, force = false){
+  // memory cache
+  if (!force && cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
 
-      const auto = getAutoRefresh();
-      const staleMin = getStaleMin();
+  const auto = getAutoRefresh();
+  const staleMin = getStaleMin();
+
+  // если force — игнорируем auto/stale и идём за свежими данными
+  if (force){
+    const byDay = await apiHomeworkRange(daysAhead);
+    setHwCache(daysAhead, byDay);
+    cacheByDayMem = byDay;
+    cacheDaysAheadMem = daysAhead;
+    return byDay;
+  }
 
       // localStorage cache
       const cached = getHwCache(daysAhead);
