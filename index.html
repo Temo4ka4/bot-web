@@ -1487,18 +1487,23 @@ body::before{
       return data;
     }
 
-    async function apiHomeworkRange(daysAhead = 30){
-      const initData = getInitData();
-      if (!initData) throw new Error("no_initData");
-      const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
-      return await fetchMaybeJson(url, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json",
-          "x-telegram-initdata": initData
-        }
-      });
+  async function apiHomeworkRange(daysAhead = 30, ts = null){
+  const initData = getInitData();
+  if (!initData) throw new Error("no_initData");
+
+  let url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead);
+  if (ts) url += "&_ts=" + encodeURIComponent(ts);
+
+  return await fetchMaybeJson(url, {
+    method: "GET",
+    cache: "no-store",            // 🔥 важно
+    headers: {
+      "Accept": "application/json",
+      "x-telegram-initdata": initData
     }
+  });
+}
+
 
     function normalizeByDay(apiData){
   if (!apiData) return {};
@@ -1875,7 +1880,7 @@ body::before{
     let cacheByDayMem = null;
     let cacheDaysAheadMem = null;
 
-  async function ensureCache(daysAhead){
+ async function ensureCache(daysAhead){
   if (cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
 
   const auto = getAutoRefresh();
@@ -1890,14 +1895,13 @@ body::before{
     return cached.byDay;
   }
 
-if (force){
   const data = await apiHomeworkRange(daysAhead);
-  setHwCache(daysAhead, byDay);
+  const byDay = normalizeByDay(data);
   cacheByDayMem = byDay;
   cacheDaysAheadMem = daysAhead;
+  setHwCache(daysAhead, byDay);
   return byDay;
 }
-
 
     function hwId(dateISO, subject, body){
       const s = (dateISO||"") + "|" + (subject||"") + "|" + (body||"");
