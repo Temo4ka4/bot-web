@@ -2096,7 +2096,7 @@ async function apiReportIssue({ title, details, page }){
   const initData = getInitData();
   if (!initData) throw new Error("no_initData");
 
-  return await fetchMaybeJson(API_BASE + "/api/report_issue", {
+  return await fetchMaybeJson(API_BASE + "/api/", {
     method: "POST",
     headers: {
       "Accept": "application/json",
@@ -2230,6 +2230,15 @@ async function apiReportIssue({ title, details, page }){
       // pick — оставляем как есть
     }
 
+function showStub(message = "🛠 Функция в разработке.\nСкоро будет доступно 🙌") {
+  if (window.Telegram?.WebApp) {
+    Telegram.WebApp.showAlert(message)
+  } else {
+    alert(message)
+  }
+}
+
+
     // ================= CLEAR CACHE =================
     document.getElementById("clearCacheBtn").addEventListener("click", () => {
       const needConfirm = getConfirmClear();
@@ -2243,6 +2252,7 @@ async function apiReportIssue({ title, details, page }){
       toast("Кэш очищен");
     });
 
+    
     // ================= REPORT =================
     document.getElementById("copyReport").addEventListener("click", async () => {
       const t = (document.getElementById("repText").value || "").trim();
@@ -2252,6 +2262,9 @@ async function apiReportIssue({ title, details, page }){
     });
 
     document.getElementById("sendReport").addEventListener("click", async () => {
+      showStub();
+return;
+
       const t = (document.getElementById("repText").value || "").trim();
       if (!t) return toast("Напиши текст");
 
@@ -2285,6 +2298,9 @@ async function apiReportIssue({ title, details, page }){
     }
 
     document.getElementById("sendSuggest").addEventListener("click", () => {
+      showStub();
+return;
+
       const payload = buildSuggestPayload();
 
       if (!payload.subject || !payload.text){
