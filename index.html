@@ -1885,6 +1885,7 @@ body::before{
   // если force — игнорируем auto/stale и идём за свежими данными
   if (force){
     const byDay = await apiHomeworkRange(daysAhead);
+    const byDay = normalizeByDay(data); 
     setHwCache(daysAhead, byDay);
     cacheByDayMem = byDay;
     cacheDaysAheadMem = daysAhead;
