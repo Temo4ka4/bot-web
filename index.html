@@ -1027,7 +1027,7 @@ body::before{
           <div class="setting-top">
             <div>
               <p class="setting-name">🧩 Логотип в шапке</p>
-              <p class="setting-desc">DZ / Книга / Тетрадь / Школа / Сова</p>
+              <p class="setting-desc">Выберите понравившийся логотип</p>
             </div>
             
             <div class="seg" id="logoSeg">
@@ -1119,21 +1119,6 @@ body::before{
           </div>
         </div>
 
-        <div class="setting">
-          <div class="setting-top">
-            <div>
-              <p class="setting-name">🐞 Ошибка / отчёт</p>
-              <p class="setting-desc">Откроется форма и отправит сообщение через бота</p>
-            </div>
-            <div class="seg">
-              <button id="openReport">Открыть</button>
-            </div>
-          </div>
-          <p class="setting-desc" style="margin-top:8px;">
-            Если ты не в Telegram — можно просто открыть <span class="muted-link" id="openDev">@Temo4ka4</span>.
-          </p>
-        </div>
-
         <p class="small" style="margin-top:12px;">
           Настройки сохраняются на этом устройстве.
         </p>
@@ -1141,31 +1126,7 @@ body::before{
       </div>
     </div>
   </div>
-
-  <!-- Report overlay -->
-  <div class="overlay" id="reportOverlay" aria-hidden="true">
-    <div class="sheet" role="dialog" aria-modal="true" aria-label="Отчёт об ошибке">
-      <div class="sheet-head">
-        <div class="sheet-title">🐞 Отчёт</div>
-        <button class="iconbtn" id="closeReport" title="Закрыть">✕</button>
-      </div>
-      <div class="sheet-body">
-        <div class="field">
-          <label for="repText">Опиши проблему</label>
-          <textarea id="repText" placeholder="Что произошло? В какой вкладке? Что ожидал?"></textarea>
-        </div>
-        <div class="btns">
-          <button class="btn primary" id="sendReport">📨 Отправить</button>
-          <button class="btn" id="copyReport">📋 Скопировать</button>
-        </div>
-        <p class="small">
-          Отправка работает через Telegram WebApp. Если открыть в браузере — можно скопировать текст и написать разработчику вручную.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div class="app">
+  
     <!-- LEFT -->
     <aside class="card sidebar">
       <div class="brand">
@@ -1217,7 +1178,6 @@ body::before{
         <button class="tab" data-index="1">📆 На завтра</button>
         <button class="tab" data-index="2">🗂 Всё ДЗ</button>
         <button class="tab" data-index="3">🔎 ДЗ по дате</button>
-        <button class="tab" data-index="4">✉️ Предложить ДЗ</button>
       </div>
 
       <div class="pages" id="pages">
@@ -1307,53 +1267,6 @@ body::before{
             <div class="skeleton">Выбери дату и нажми “Показать”.</div>
           </div>
         </section>
-
-        <!-- 4: suggest -->
-        <section class="page" data-index="4">
-          <div class="page-head">
-            <div>
-              <h3>Предложить ДЗ</h3>
-              <p class="note">Отправим предложением в бота</p>
-            </div>
-            <span class="badge good">✨</span>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="sDate">Дата</label>
-              <input id="sDate" type="date" />
-            </div>
-            <div class="field">
-              <label for="sSubject">Предмет</label>
-              <input id="sSubject" type="text" placeholder="Например: Алгебра" />
-            </div>
-          </div>
-
-          <div class="field" style="margin-top: 10px;">
-            <label for="sText">Текст ДЗ</label>
-            <textarea id="sText" placeholder="Например: №123 (1-5), подготовить правило…"></textarea>
-          </div>
-
-          <div class="btns">
-            <button class="btn primary" id="sendSuggest">✉️ Отправить</button>
-            <button class="btn" id="copySuggest">📋 Скопировать</button>
-            <button class="btn" id="clearSuggest">🧽 Очистить</button>
-          </div>
-
-          <p class="small" id="suggestHint">
-            Отправка работает через Telegram WebApp. Если открыть это в браузере — нажми “Скопировать” и вставь в чат бота.
-          </p>
-
-          <div class="btns">
-            <button class="btn" id="openBot">🤖 Открыть бота</button>
-          </div>
-        </section>
-
-      </div>
-    </main>
-  </div>
-
-  <div class="toast" id="toast">готово</div>
 
   <script>
     // ================= SETTINGS KEYS =================
@@ -1714,8 +1627,6 @@ body::before{
     document.getElementById("closeSettings").addEventListener("click", () => closeOverlay(settingsOverlay));
     settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeOverlay(settingsOverlay); });
 
-    document.getElementById("openReport").addEventListener("click", () => openOverlay(reportOverlay));
-    document.getElementById("closeReport").addEventListener("click", () => closeOverlay(reportOverlay));
     reportOverlay.addEventListener("click", (e) => { if (e.target === reportOverlay) closeOverlay(reportOverlay); });
 
     // clickable @Temo4ka4
@@ -2077,36 +1988,6 @@ body::before{
       }
     }
 
-  async function apiProposeHW({ day, subject, text }){
-    const initData = getInitData();
-    if (!initData) throw new Error("no_initData");
-
-    return await fetchMaybeJson(API_BASE + "/api/propose_hw", {
-     method: "POST",
-     headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-      "x-telegram-initdata": initData
-    },
-    body: JSON.stringify({ day, subject, text })
-  });
-}
-
-async function apiReportIssue({ title, details, page }){
-  const initData = getInitData();
-  if (!initData) throw new Error("no_initData");
-
-  return await fetchMaybeJson(API_BASE + "/api/report_issue", {
-    method: "POST",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-      "x-telegram-initdata": initData
-    },
-    body: JSON.stringify({ title, details, page })
-  });
-}
-
     async function loadAll(){
       const allList = document.getElementById("allList");
       allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
@@ -2243,37 +2124,6 @@ async function apiReportIssue({ title, details, page }){
       toast("Кэш очищен");
     });
 
-    // ================= REPORT =================
-    document.getElementById("copyReport").addEventListener("click", async () => {
-      const t = (document.getElementById("repText").value || "").trim();
-      if (!t) return toast("Напиши текст");
-      const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
-      toast(ok ? "Скопировано" : "Не скопировалось");
-    });
-
-    document.getElementById("sendReport").addEventListener("click", async () => {
-      const t = (document.getElementById("repText").value || "").trim();
-      if (!t) return toast("Напиши текст");
-
-     const payload = {
-  action: "report_issue",
-  title: "Ошибка в WebApp",
-  details: t,
-  page: document.querySelector(".tab[data-active='true']")?.textContent?.trim() || ""
-};
-
-
-      if (tg && tg.sendData){
-        tg.sendData(JSON.stringify(payload));
-        toast("Отправлено");
-        document.getElementById("repText").value = "";
-        closeOverlay(reportOverlay);
-      }else{
-        const ok = await copyToClipboard("🐞 Ошибка в WebApp:\n" + t);
-        toast(ok ? "Скопировано (вне Telegram)" : "Вне Telegram");
-      }
-    });
-
     // ================= SUGGEST =================
     function buildSuggestPayload(){
       return {
@@ -2283,45 +2133,6 @@ async function apiReportIssue({ title, details, page }){
         text: (document.getElementById("sText").value || "").trim()
       };
     }
-
-    document.getElementById("sendSuggest").addEventListener("click", () => {
-      const payload = buildSuggestPayload();
-
-      if (!payload.subject || !payload.text){
-        toast("Заполни предмет и текст");
-        return;
-      }
-
-      if (tg && tg.sendData){
-        tg.sendData(JSON.stringify(payload));
-        toast("Отправлено в бота");
-      }else{
-        toast("Это работает только внутри Telegram");
-      }
-    });
-
-    document.getElementById("copySuggest").addEventListener("click", async () => {
-      const payload = buildSuggestPayload();
-      if (!payload.subject || !payload.text){
-        toast("Заполни предмет и текст");
-        return;
-      }
-      const text = `📩 Предложение ДЗ\n📅 ${payload.date}\n📚 ${payload.subject}\n\n${payload.text}`;
-      const ok = await copyToClipboard(text);
-      toast(ok ? "Скопировано" : "Не скопировалось");
-    });
-
-    document.getElementById("clearSuggest").addEventListener("click", () => {
-      document.getElementById("sSubject").value = "";
-      document.getElementById("sText").value = "";
-      toast("Очищено");
-    });
-
-    document.getElementById("openBot").addEventListener("click", () => {
-      const url = "https://t.me/Temo4ka4bot";
-      if (tg?.openTelegramLink) tg.openTelegramLink(url);
-      else window.open(url, "_blank");
-    });
 
     // ================= INIT SPLASH =================
     function hideSplash(){
