@@ -1217,7 +1217,6 @@ body::before{
         <button class="tab" data-index="1">📆 На завтра</button>
         <button class="tab" data-index="2">🗂 Всё ДЗ</button>
         <button class="tab" data-index="3">🔎 ДЗ по дате</button>
-        <button class="tab" data-index="4">✉️ Предложить ДЗ</button>
       </div>
 
       <div class="pages" id="pages">
@@ -2291,7 +2290,7 @@ return;
     function buildSuggestPayload(){
       return {
         action: "propose_hw",
-        day: payload.date,  
+        day: document.getElementById("sDate").value,
         subject: (document.getElementById("sSubject").value || "").trim(),
         text: (document.getElementById("sText").value || "").trim()
       };
