@@ -2155,17 +2155,26 @@ async function apiReportIssue({ title, details, page }){
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
    document.getElementById("reloadAll").addEventListener("click", async () => {
-  // убиваем memory-cache (иначе ensureCache вернёт старьё)
-  cacheByDayMem = null;
-  cacheDaysAheadMem = null;
+  try {
+    // UI чтобы не было “пусто”
+    document.getElementById("allList").innerHTML = `<div class="skeleton">Загружаю…</div>`;
 
-  // убиваем localStorage-cache
-  clearHwCache();
+    // чистим ТОЛЬКО кэш ДЗ
+    clearHwCache();
 
-  await loadAll(true);
-  toast("Обновлено ✅");
+    // чистим memory cache если есть
+    cacheByDayMem = null;
+    cacheDaysAheadMem = null;
+
+    // форсим загрузку
+    await loadAll(true);
+
+    toast("Обновлено ✅");
+  } catch (e) {
+    toast("Не удалось обновить ❌");
+    console.log(e);
+  }
 });
-
 
     function jumpToDateInAll(dateISO){
       const el = document.getElementById("day-" + dateISO);
