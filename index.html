@@ -1764,9 +1764,7 @@ body::before{
     document.getElementById("todayNote").textContent = prettyDateLabel(todayISO);
 
     const pickDateEl = document.getElementById("pickDate");
-    const sDateEl = document.getElementById("sDate");
     pickDateEl.value = todayISO;
-    sDateEl.value = todayISO;
 
     let cacheByDayMem = null;
     let cacheDaysAheadMem = null;
@@ -2128,12 +2126,6 @@ body::before{
 
     // ================= INIT =================
     
-    function openDevChat(){
-      const url = "https://t.me/" + DEV_USERNAME;
-      if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
-      else window.open(url, "_blank");
-    }
-
     function setTechworks(on, title, msg){
       const o = document.getElementById("techOverlay");
       if (!o) return;
@@ -2177,7 +2169,6 @@ body::before{
       const d = document.getElementById("techDev");
       if (r) r.addEventListener("click", () => location.reload());
       if (x) x.addEventListener("click", () => { try{ if (tg && tg.close) tg.close(); }catch(e){} window.close(); });
-      if (d) d.addEventListener("click", openDevChat);
     })();
 
 
