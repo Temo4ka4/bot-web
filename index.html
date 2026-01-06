@@ -2172,15 +2172,39 @@ async function apiReportIssue({ title, details, page }){
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
    document.getElementById("reloadAll").addEventListener("click", async () => {
+  const allList = document.getElementById("allList");
+  allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+
   try {
-    await loadAllFresh();
+    // форс: игнорируем memory cache
+    cacheByDayMem = null;
+    cacheDaysAheadMem = null;
+
+    // берём свежак напрямую с API (как при первом запуске)
+    const data = await apiHomeworkRange(60);
+
+    // ВАЖНО: нормализуем так же, как в обычной загрузке
+    const byDay = normalizeByDay(data);
+
+    // сохраняем и рисуем
+    cacheByDayMem = byDay;
+    cacheDaysAheadMem = 60;
+    setHwCache(60, byDay);
+
+    const total = renderGroupedAll(allList, byDay);
+    document.getElementById("allCount").textContent = String(total);
+    filterAll(document.getElementById("allSearch").value || "");
+
     toast("Обновлено ✅");
   } catch (e) {
-    console.log(e);
+    console.log("reloadAll error:", e);
+
+    // покажем ошибку пользователю, иначе ты будешь “вслепую” чинить
+    const msg = e?.message ? e.message : String(e);
+    allList.innerHTML = `<div class="skeleton">Ошибка обновления: ${escapeHtml(msg)}</div>`;
     toast("Не удалось обновить ❌");
   }
 });
-
 
     function jumpToDateInAll(dateISO){
       const el = document.getElementById("day-" + dateISO);
