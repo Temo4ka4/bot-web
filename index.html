@@ -1269,6 +1269,10 @@ body::before{
         </section>
 
   <script>
+          </div> <!-- /pages -->
+    </main>
+  </div> <!-- /app -->
+
     // ================= SETTINGS KEYS =================
     const THEME_KEY = "dz_webapp_theme";             // light|dark
     const ACCENT_KEY = "dz_webapp_accent";           // standard|purple|mint
@@ -2106,16 +2110,6 @@ body::before{
       toast("Кэш очищен");
     });
 
-    // ================= SUGGEST =================
-    function buildSuggestPayload(){
-      return {
-        action: "propose_hw",
-        day: payload.date,  
-        subject: (document.getElementById("sSubject").value || "").trim(),
-        text: (document.getElementById("sText").value || "").trim()
-      };
-    }
-
     // ================= INIT SPLASH =================
     function hideSplash(){
       const splash = document.getElementById("splash");
@@ -2191,5 +2185,6 @@ body::before{
       setTimeout(hideSplash, left);
     })();
   </script>
+      <div class="toast" id="toast"></div>
 </body>
 </html>
