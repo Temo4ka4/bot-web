@@ -1593,20 +1593,13 @@ body::before{
 
     // ================= SETTINGS OVERLAYS =================
     const settingsOverlay = document.getElementById("settingsOverlay");
-    const reportOverlay = document.getElementById("reportOverlay");
 
     function openOverlay(overlayEl){
       overlayEl.classList.add("show");
       overlayEl.setAttribute("aria-hidden","false");
       document.body.classList.add("modal-open");
     }
-    function closeOverlay(overlayEl){
-      overlayEl.classList.remove("show");
-      overlayEl.setAttribute("aria-hidden","true");
-      if (![settingsOverlay, reportOverlay].some(o => o.classList.contains("show"))){
-        document.body.classList.remove("modal-open");
-      }
-    }
+
 
     function showMiniSplash(text, tip){
       const el = document.getElementById("miniSplash");
@@ -1626,15 +1619,6 @@ body::before{
 
     document.getElementById("closeSettings").addEventListener("click", () => closeOverlay(settingsOverlay));
     settingsOverlay.addEventListener("click", (e) => { if (e.target === settingsOverlay) closeOverlay(settingsOverlay); });
-
-    reportOverlay.addEventListener("click", (e) => { if (e.target === reportOverlay) closeOverlay(reportOverlay); });
-
-    // clickable @Temo4ka4
-    document.getElementById("openDev").addEventListener("click", () => {
-      const url = "https://t.me/Temo4ka4";
-      if (tg?.openTelegramLink) tg.openTelegramLink(url);
-      else window.open(url, "_blank");
-    });
 
     // ================= SEG BUTTONS HANDLERS =================
     document.getElementById("modeSeg").addEventListener("click", (e) => {
