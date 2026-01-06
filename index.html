@@ -1500,6 +1500,25 @@ body::before{
       });
     }
 
+    async function apiHomeworkRangeFresh(daysAhead = 30){
+  const initData = getInitData();
+  if (!initData) throw new Error("no_initData");
+
+  // cache-busting: новый URL каждый раз
+  const url = API_BASE + "/api/homework_range?days_ahead=" + encodeURIComponent(daysAhead)
+            + "&_ts=" + Date.now();
+
+  // ВАЖНО: заголовки 1-в-1 как в apiHomeworkRange (ничего не меняем!)
+  return await fetchMaybeJson(url, {
+    method: "GET",
+    cache: "no-store", // браузеру запрещаем кэшировать
+    headers: {
+      "Accept": "application/json",
+      "x-telegram-initdata": initData
+    }
+  });
+}
+
     function normalizeByDay(apiData){
   if (!apiData) return {};
 
@@ -2122,6 +2141,23 @@ async function apiReportIssue({ title, details, page }){
       }
     }
 
+    async function loadAllForce(){
+  const allList = document.getElementById("allList");
+  allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+
+  const data = await apiHomeworkRangeFresh(60);
+  const byDay = normalizeByDay(data);
+
+  // обновляем И memory-cache, И localStorage-cache
+  cacheByDayMem = byDay;
+  cacheDaysAheadMem = 60;
+  setHwCache(60, byDay);
+
+  const total = renderGroupedAll(allList, byDay);
+  document.getElementById("allCount").textContent = String(total);
+  filterAll(document.getElementById("allSearch").value || "");
+}
+
     async function loadPick(dateISO){
       const pickList = document.getElementById("pickList");
       pickList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
@@ -2144,8 +2180,16 @@ async function apiReportIssue({ title, details, page }){
     document.getElementById("pickToday").addEventListener("click", () => { pickDateEl.value = todayISO; loadPick(todayISO); });
     document.getElementById("pickTomorrow").addEventListener("click", () => { pickDateEl.value = tomorrowISO; loadPick(tomorrowISO); });
 
-    // all buttons
-    document.getElementById("reloadAll").addEventListener("click", () => loadAll());
+    document.getElementById("reloadAll").addEventListener("click", async () => {
+  try{
+    await loadAllForce();
+    toast("Обновлено ✅");
+  }catch(e){
+    console.log("reloadAll error:", e);
+    toast("Не удалось обновить ❌");
+  }
+});
+
 
     function jumpToDateInAll(dateISO){
       const el = document.getElementById("day-" + dateISO);
