@@ -1875,43 +1875,28 @@ body::before{
     let cacheByDayMem = null;
     let cacheDaysAheadMem = null;
 
-   async function ensureCache(daysAhead, force = false){
-  // memory cache
-  if (!force && cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
+  async function ensureCache(daysAhead){
+  if (cacheByDayMem && cacheDaysAheadMem === daysAhead) return cacheByDayMem;
 
   const auto = getAutoRefresh();
   const staleMin = getStaleMin();
 
-  // если force — игнорируем auto/stale и идём за свежими данными
-  if (force){
-    const byDay = await apiHomeworkRange(daysAhead);
-    setHwCache(daysAhead, byDay);
-    cacheByDayMem = byDay;
+  const cached = getHwCache(daysAhead);
+  const isStale = cached ? ((Date.now() - cached.ts) > staleMin*60*1000) : true;
+
+  if (cached && (!auto || !isStale)){
+    cacheByDayMem = cached.byDay;
     cacheDaysAheadMem = daysAhead;
-    return byDay;
+    return cached.byDay;
   }
 
-      // localStorage cache
-      const cached = getHwCache(daysAhead);
-      const isStale = cached ? ((Date.now() - cached.ts) > staleMin*60*1000) : true;
-
-      if (cached && (!auto || !isStale)){
-        cacheByDayMem = cached.byDay;
-        cacheDaysAheadMem = daysAhead;
-        return cached.byDay;
-      }
-
-      // fetch
-      const data = await apiHomeworkRange(daysAhead);
-      const byDay = normalizeByDay(data);
-      cacheByDayMem = byDay;
-      cacheDaysAheadMem = daysAhead;
-      setHwCache(daysAhead, byDay);
-      return byDay;
-    }
-
-    // store for copy/search
-    const hwStore = {}; // id -> {date, subject, body}
+  const data = await apiHomeworkRange(daysAhead);
+  const byDay = normalizeByDay(data);
+  cacheByDayMem = byDay;
+  cacheDaysAheadMem = daysAhead;
+  setHwCache(daysAhead, byDay);
+  return byDay;
+}
 
     function hwId(dateISO, subject, body){
       const s = (dateISO||"") + "|" + (subject||"") + "|" + (body||"");
@@ -2131,6 +2116,33 @@ async function apiReportIssue({ title, details, page }){
   }
 }
 
+    async function loadAllFresh(){
+  const allList = document.getElementById("allList");
+  allList.innerHTML = `<div class="skeleton">Загружаю…</div>`;
+
+  // 1) сбрасываем memory cache
+  cacheByDayMem = null;
+  cacheDaysAheadMem = null;
+
+  // 2) сбрасываем localStorage cache (как у тебя)
+  clearHwCache();
+
+  // 3) тянем свежие данные с cache-busting параметром
+  // ВАЖНО: это работает, только если apiHomeworkRange внутри использует fetch(url)
+  const data = await apiHomeworkRange(60, Date.now()); // передадим ts вторым аргументом
+  const byDay = normalizeByDay(data);
+
+  // 4) сохраняем
+  cacheByDayMem = byDay;
+  cacheDaysAheadMem = 60;
+  setHwCache(60, byDay);
+
+  // 5) рендерим
+  const total = renderGroupedAll(allList, byDay);
+  document.getElementById("allCount").textContent = String(total);
+  filterAll(document.getElementById("allSearch").value || "");
+}
+
 
     async function loadPick(dateISO){
       const pickList = document.getElementById("pickList");
@@ -2156,25 +2168,14 @@ async function apiReportIssue({ title, details, page }){
 
    document.getElementById("reloadAll").addEventListener("click", async () => {
   try {
-    // UI чтобы не было “пусто”
-    document.getElementById("allList").innerHTML = `<div class="skeleton">Загружаю…</div>`;
-
-    // чистим ТОЛЬКО кэш ДЗ
-    clearHwCache();
-
-    // чистим memory cache если есть
-    cacheByDayMem = null;
-    cacheDaysAheadMem = null;
-
-    // форсим загрузку
-    await loadAll(true);
-
+    await loadAllFresh();
     toast("Обновлено ✅");
   } catch (e) {
-    toast("Не удалось обновить ❌");
     console.log(e);
+    toast("Не удалось обновить ❌");
   }
 });
+
 
     function jumpToDateInAll(dateISO){
       const el = document.getElementById("day-" + dateISO);
