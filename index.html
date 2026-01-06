@@ -2291,7 +2291,7 @@ return;
     function buildSuggestPayload(){
       return {
         action: "propose_hw",
-        day: payload.date,  
+        day: document.getElementById("sDate").value,
         subject: (document.getElementById("sSubject").value || "").trim(),
         text: (document.getElementById("sText").value || "").trim()
       };
